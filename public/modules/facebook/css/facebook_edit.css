@@ -1,0 +1,360 @@
+/* Scoped within .facebook-edit to prevent global conflicts */
+.facebook-edit .nav-pills .nav-item {
+    margin-right: 5px;
+}
+
+.facebook-edit .nav-pills .nav-link {
+    padding: 5px 10px;
+    font-size: 15px;
+}
+
+.facebook-edit .nav-pills-container {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+}
+
+.facebook-edit .nav-pills {
+    width: 100%;
+}
+
+.facebook-edit .friends-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 20px;
+    justify-items: center;
+}
+
+.facebook-edit .friend {
+    text-align: center;
+    width: 100%;
+    max-width: 150px;
+}
+
+.facebook-edit .friend img {
+    width: 120px;
+    height: 120px;
+    border-radius: 10px;
+    object-fit: cover;
+    margin-bottom: 10px;
+}
+
+
+
+/* nguyen nhan */
+.facebook-edit .wrapper {
+    background: transparent;
+    border: 2px solid rgba(225, 225, 225, 0.2);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    color: #FFFFFF;
+    /* padding: 30px 40px; */
+}
+
+.facebook-edit ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.facebook-edit a {
+    text-decoration: none;
+}
+
+.facebook-edit .header__wrapper header {
+    width: 100%;
+    background: url("{{ asset('testImg/bg.jpeg') }}") no-repeat 50% 20% / cover;
+    min-height: 80px;
+}
+
+.facebook-edit .cols__container .left__col {
+    padding: 25px 20px;
+    text-align: center;
+    max-width: 350px;
+    position: relative;
+    margin: 0 auto;
+}
+
+.facebook-edit .cols__container .left__col .img__container {
+    position: absolute;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.facebook-edit .cols__container .left__col .img__container img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+    box-shadow: 1px 3px 12px rgba(0, 0, 0, 0.18);
+}
+
+.facebook-edit .cols__container .left__col .img__container span {
+    position: absolute;
+    background: #2afa6a;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    bottom: 3px;
+    right: 11px;
+    border: 2px solid #fff;
+}
+
+.facebook-edit .cols__container .left__col h2 {
+    margin-top: 60px;
+    font-weight: 600;
+    font-size: 22px;
+    margin-bottom: 5px;
+}
+
+.facebook-edit .cols__container .left__col p {
+    font-size: 0.9rem;
+    color: #818181;
+    margin: 0;
+}
+
+.facebook-edit .cols__container .left__col .about {
+    justify-content: space-between;
+    position: relative;
+    margin: 35px 0;
+}
+
+.facebook-edit .cols__container .left__col .about li {
+    display: flex;
+    flex-direction: column;
+    color: #818181;
+    font-size: 0.9rem;
+}
+
+.facebook-edit .cols__container .left__col .about li span {
+    color: #1d1d1d;
+    font-weight: 600;
+}
+
+.facebook-edit .cols__container .left__col .about:after {
+    position: absolute;
+    content: "";
+    bottom: -16px;
+    display: block;
+    background: #cccccc;
+    height: 1px;
+    width: 100%;
+}
+
+.facebook-edit .cols__container .left__col .content p {
+    font-size: 1rem;
+    color: #1d1d1d;
+    line-height: 1.8em;
+}
+
+.facebook-edit .cols__container .left__col .content ul {
+    gap: 30px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 25px;
+}
+
+.facebook-edit .cols__container .left__col .content ul li {
+    display: flex;
+}
+
+.facebook-edit .cols__container .left__col .content ul i {
+    font-size: 1.3rem;
+}
+
+.facebook-edit .cols__container .right__col nav {
+    display: flex;
+    align-items: center;
+    padding: 30px 0;
+    justify-content: space-between;
+    flex-direction: column;
+}
+
+.facebook-edit .cols__container .right__col nav ul {
+    display: flex;
+    gap: 20px;
+    flex-direction: column;
+}
+
+.facebook-edit .cols__container .right__col nav ul li a {
+    text-transform: uppercase;
+    color: #818181;
+}
+
+.facebook-edit .cols__container .right__col nav ul li:nth-child(1) a {
+    color: #1d1d1d;
+    font-weight: 600;
+}
+
+.facebook-edit .cols__container .right__col nav button {
+    background: #0091ff;
+    color: #fff;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+.facebook-edit .cols__container .right__col nav button:hover {
+    opacity: 0.8;
+}
+
+.facebook-edit .cols__container .right__col .photos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 20px;
+}
+
+.facebook-edit .cols__container .right__col .photos img {
+    max-width: 100%;
+    display: block;
+    height: 100%;
+    object-fit: cover;
+}
+
+@media (min-width: 868px) {
+    .facebook-edit .cols__container {
+        margin: 0 auto;
+        width: 90%;
+        justify-content: space-between;
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 50px;
+    }
+
+    .facebook-edit .cols__container .left__col {
+        padding: 25px 0px;
+    }
+
+    .facebook-edit .cols__container .right__col nav ul {
+        flex-direction: row;
+        gap: 30px;
+    }
+
+    .facebook-edit .cols__container .right__col .photos {
+        height: 365px;
+        overflow: auto;
+        padding: 0 0 30px;
+    }
+}
+
+@media (min-width: 1017px) {
+    .facebook-edit .cols__container .left__col {
+        margin: 0;
+        margin-right: auto;
+    }
+
+    .facebook-edit .cols__container .right__col nav {
+        flex-direction: row;
+    }
+
+    .facebook-edit .cols__container .right__col nav button {
+        margin-top: 0;
+    }
+}
+
+/* Custom Form Controls Scoped */
+/* Cập nhật màu chữ và nền cho các trường nhập liệu */
+.facebook-edit .face-edit-form-control {
+    width: 100%;
+    background-color: #FFFFFF;
+    /* Thay đổi thành màu nền trắng */
+    color: #000000;
+    /* Thay đổi thành màu chữ đen */
+    outline: none;
+    font-size: 16px;
+    padding: 10px;
+    /* Giảm padding nếu cần */
+    box-shadow: 0 0 5px #000000;
+    /* Điều chỉnh box-shadow nếu cần */
+}
+
+.facebook-edit .face-edit-form-control::placeholder {
+    color: #888888;
+    /* Màu placeholder xám nhạt */
+}
+
+.facebook-edit .face-edit-form-control:hover,
+.facebook-edit .face-edit-form-control:focus {
+    background-color: #FFFFFF;
+    color: #000000;
+}
+
+/* Đảm bảo các thẻ <select> có màu chữ đen */
+.facebook-edit .face-edit-form-control select {
+    color: #000000;
+    background-color: #FFFFFF;
+}
+
+/* Nếu cần, điều chỉnh màu chữ cho các thẻ <option> */
+.facebook-edit .face-edit-form-control select option {
+    color: #000000;
+    background-color: #FFFFFF;
+}
+
+/* Override Bootstrap's .form-control within .facebook-edit */
+/* .facebook-edit .form-control {
+    width: 100%;
+    height: 45px;
+    background: transparent;
+    outline: none;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    cursor: text;
+    font-size: 16px;
+    color: #FFFFFF;
+    font-weight: 600;
+} */
+
+.facebook-edit .form-control:hover,
+.facebook-edit .form-control:focus {
+    background: #FFFFFF;
+    color: #000000;
+}
+
+/* Override styles for the modal to ensure inputs are interactable */
+#addVideoModal .modal-content {
+    pointer-events: auto;
+    z-index: 1055;
+    /* Ensure it's above other elements */
+}
+
+/* Ensure input fields inside the modal are not affected by parent styles */
+#addVideoModal .form-control {
+    pointer-events: auto;
+    background-color: #fff;
+    color: #000;
+}
+
+
+/* Loader CSS */
+.loader {
+    width: fit-content;
+    font-size: 40px;
+    font-family: system-ui, sans-serif;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #0000;
+    -webkit-text-stroke: 1px #fff;
+    background: linear-gradient(-60deg, #0000 45%, #267baf 0 55%, #0000 0) 0 / 300% 100% no-repeat text;
+    animation: l3 2s linear infinite;
+}
+
+.loader:before {
+    content: "Loading";
+}
+
+@keyframes l3 {
+    0% {
+        background-position: 100%;
+    }
+
+    100% {
+        background-position: 0;
+    }
+}

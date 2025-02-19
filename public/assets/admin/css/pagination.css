@@ -1,0 +1,39 @@
+.pagination {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    list-style: none;
+    padding: 0;
+}
+
+.pagination li a,
+.pagination li span {
+    display: block;
+    padding: 5px 10px;
+    border: none;
+    background-color: #232526;
+    color: white;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.pagination li a:hover {
+    background-color: #0056b3;
+}
+
+.pagination li.disabled a {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+.pagination li span.current {
+    background-color: rgb(186, 199, 211);
+    cursor: default;
+}
+
+.pagination li span.dots {
+    background-color: transparent;
+    cursor: default;
+    color: #fff;
+}

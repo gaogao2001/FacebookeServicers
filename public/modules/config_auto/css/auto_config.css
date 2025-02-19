@@ -1,0 +1,142 @@
+.wrapper {
+    background: transparent;
+    border: 2px solid rgba(225, 225, 225, .2);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 10px rgba(0, 0, 0, .2);
+    color: #FFFFFF;
+    padding: 30px 40px;
+}
+
+.edit-form-control {
+    width: 100%;
+    background-color: transparent;
+    color: #FFFFFF;
+    border: none;
+    outline: none;
+    border: 2px solid rgba(255, 255, 255, .2);
+    font-size: 16px;
+
+    box-shadow: #000000 0 0 10px;
+}
+
+.edit-form-control:hover,
+.edit-form-control:focus {
+    background-color: #FFFFFF;
+    color: #000000;
+}
+
+.edit-form-control::placeholder {
+    color: #FFFFFF;
+}
+
+.edit-form-control:hover::placeholder,
+.edit-form-control:focus::placeholder {
+    color: #000000;
+}
+
+
+
+.switch[type="checkbox"] {
+    appearance: none;
+    position: relative;
+    width: 42px;
+    height: 20px;
+    background: #f2f2f2;
+    border-radius: 25px;
+    border: 2px solid #d2d2d2;
+    transition: 0.2s;
+
+    &:focus {
+        outline: none;
+    }
+
+    &:after {
+        content: "";
+        width: 16px;
+        height: 16px;
+        background: #fff;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        margin: auto;
+        border-radius: 50%;
+        transition: 0.2s;
+        box-shadow: 1px 0 5px -1px rgba(0, 0, 0, 0.2);
+    }
+
+    &:checked {
+        background: #5aacff;
+        border-color: #95caff;
+
+        &:after {
+            left: 22px;
+            box-shadow: -1px 0 5px -1px rgba(0, 0, 0, 0.2);
+        }
+    }
+}
+
+.switch {
+    transform: scale(1);
+    margin: auto;
+}
+
+span {
+    display: inline-block;
+    vertical-align: middle;
+
+}
+
+.title {
+    display: inline-block;
+}
+
+/* Khu vực lựa chọn nền tảng */
+.platform-options {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.platform {
+    text-align: center;
+}
+
+.platform h6 {
+    margin-bottom: 10px;
+}
+
+.config-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    /* Khoảng cách giữa các phần */
+    margin-bottom: 20px;
+}
+
+.feature {
+    flex-shrink: 0;
+    text-align: center;
+    width: 150px;
+}
+
+.inputs {
+    display: flex;
+    gap: 20px;
+    flex: 1;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+}
+
+.input-group label {
+    margin-bottom: 5px;
+    text-align: center;
+    font-size: 12px;
+}

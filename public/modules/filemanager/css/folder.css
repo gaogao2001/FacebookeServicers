@@ -1,0 +1,124 @@
+.folder-icon {
+    font-size: 48px;
+    color: #f8b500;
+}
+
+.folder-name {
+    margin-top: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Hover effects cho các nút */
+#openPopupButton:hover {
+    transform: translateY(-3px);
+    background-color: #ff5733;
+}
+
+#createFolderButton:hover {
+    transform: translateY(-3px);
+    background-color: #ff5733;
+}
+
+#selectPathButton:hover {
+    transform: translateY(-3px);
+    background-color: #28a745;
+}
+
+/* Kiểm tra các phần tử khác nếu cần */
+
+/* Đảm bảo nút quay lại được hiển thị đúng */
+#backButton {
+    padding: 8px 12px;
+    background: #6c757d;
+    /* Màu sắc thứ cấp của Bootstrap */
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+#backButton:hover {
+    background: #5a6268;
+}
+
+/* Định dạng nội dung thư mục */
+#popupContent {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 20px;
+    align-items: start;
+}
+
+.folder {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+
+.folder:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.folder-icon {
+    font-size: 48px;
+    color: #f8b500;
+}
+
+.folder-name {
+    margin-top: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Đảm bảo tiêu đề modal không bị che trùm */
+.modal-header {
+    position: relative;
+}
+
+.modal-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+
+/* filepath: /var/www/FacebookService/public/modules/filemanager/css/folder.css */
+.folder-icon {
+    font-size: 48px;
+    color: #f8b500;
+    margin-bottom: 10px;
+}
+
+.folder-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+}
+
+
+.folder:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+
+
+
+
+/* Các định dạng khác giữ nguyên */
