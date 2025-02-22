@@ -51,6 +51,9 @@ class AppServiceProvider extends ServiceProvider
             '/facebook-delete/*',
             'Android/Join-groups/*',
             '/Android/like-follow/*',
+            '/notifications',
+            '/notifications/*',
+            '/delete-notifications',
         ]);
 
         $this->loadViewsFrom(base_path('app/Modules/Auth/Views'), 'Auth');
@@ -61,6 +64,7 @@ class AppServiceProvider extends ServiceProvider
         $this->loadViewsFrom(base_path('app/Modules/BackupData/Views'), 'BackupData');
         $this->loadViewsFrom(base_path('app/Modules/FileManager/Views'), 'FileManager');
         $this->loadViewsFrom(base_path('app/Modules/Map/Views'), 'Map');
+        $this->loadViewsFrom(base_path('app/Modules/Notification/Views'), 'Notification');
 
     }
 }

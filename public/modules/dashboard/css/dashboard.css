@@ -198,3 +198,15 @@
         transition: all 0.3s ease-in-out;
         box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
     } */
+
+    .navbar-nav .count {
+        /* Bỏ nền màu đỏ được áp dụng bởi bg-danger */
+        background-color: transparent !important;
+        /* Hiển thị số với màu đỏ */
+        color: red !important;
+        font-size: 14px;
+        font-weight: bold;
+        /* Nếu có padding hay border-radius cũ, cần xóa bỏ */
+        padding: 0;
+        border-radius: 0;
+    }

@@ -240,6 +240,7 @@ $(document).ready(function () {
                 tinymce.get('contentBody').setContent(content.content);
                 $('#contentId').val(content._id.$oid);
                 $('#post_platform').val(content.post_platform || '');
+                $('#post_platform').trigger('change');
                 $('#contentPrice').val(content.price || '');
                 $('#latitude').val(content.latitude || '');
                 $('#longitude').val(content.longitude || '');
@@ -418,6 +419,35 @@ $(document).ready(function () {
             console.warn("Không thể xác định vị trí của bạn.");
         });
     }
+    $('#post_platform').on('change', function () {
+        const val = $(this).val();
+        if (val === 'ChoTot' || val === 'Shopee' || val === 'FacebookMarketplace') {
+            $('#locationPicker').show();
+            $('#priceInputGroup').show();
+        } else {
+            $('#locationPicker').hide();
+            $('#priceInputGroup').hide();
+            // Xoá lat/lng và giá
+            $('#latitude').val('');
+            $('#longitude').val('');
+            $('#contentPrice').val('');
+        }
+    });
 
     loadContents();
+
+    $('#btnFileManager').click(function () {
+        $('#fileManagerModal').modal('show');
+    });
+
+    // Hàm callback sẽ được gọi khi FileManager chọn hình
+    // FileManager cần thực hiện postMessage hoặc gọi window.onFileSelected(url)
+    function onFileSelected(url) {
+        $('#fileManagerModal').modal('hide');
+        // Hiển thị hình được chọn
+        $('#currentImages').append('<img src="' + url + '" height="100" style="margin:5px;">');
+        // Nếu cần lưu giá trị để submit form, bạn có thể thêm input hidden chứa url đó
+    }
+    // Gắn callback ra global để FileManager có thể gọi
+    window.onFileSelected = onFileSelected;
 });

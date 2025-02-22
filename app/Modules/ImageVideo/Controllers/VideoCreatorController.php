@@ -94,7 +94,7 @@ class VideoCreatorController extends Controller
 
         $videoEditor = new VideoEditor($outputFolder);
 
-        dd($videos, $outputFile, $keepVideoAudio, $audioPath, $transitionOptions);
+        //dd($videos, $outputFile, $keepVideoAudio, $audioPath, $transitionOptions);
         $success = $videoEditor->concatVideos(
             $videos,
             $outputFile,
@@ -102,7 +102,7 @@ class VideoCreatorController extends Controller
             $audioPath,
             $transitionOptions
         );
-        // dd($success);
+       
 
         if ($success) {
             file_put_contents("/tmp/video_create.txt", $outputFile);
@@ -113,15 +113,25 @@ class VideoCreatorController extends Controller
     }
 
 
-    public function extractAudio()
+    public function extractAudio(Request $request)
     {
-        $audio = new VideoEditor('/var/www/FacebookService/.vscode/FileVideoImage/audio');
+        $video = $request->file('video');
+        $outputAudio = $request->outputAudio;
 
-        $inputVideo = '/var/www/FacebookService/.vscode/FileVideoImage/video/7f08c80462.mp4';
-        $outputAudio = 'extracted_audio.mp3';
+       
 
-        $success = $audio->extractAudio($inputVideo, $outputAudio);
-        var_dump($success);
-        die('iiiiiiiiiiiiiii');
+        $outputFolder = '/var/www/html/ouput';
+
+        $audio = new VideoEditor($outputFolder);
+
+        $success = $audio->extractAudio($video, $outputAudio);
+        
+
+        if($success){
+            return response()->json(['message' => 'Tách audio thành công', 'outputFile' => $outputAudio], 200);
+        } else {
+            return response()->json(['message' => 'Tách audio thất bại'], 500);
+        }
+       
     }
 }

@@ -19,15 +19,28 @@ Route::get('/Android/Search-result/{uid?}', [HomeAccountController::class, 'sear
     ->where('uid', '.*')
     ->name('android.searchResult');
 
-Route::get('Android/SyncFanpage/{uid}', [HomeAccountController::class, 'syncFanpage'])
+Route::get('/Android/SyncFanpage/{uid}', [HomeAccountController::class, 'syncFanpage'])
     ->where('uid', '.*')
     ->name('android.syncFanpage');
 
-Route::post('Android/Start-sub', [HomeAccountController::class, 'SubNow'])
+Route::post('/Android/Start-sub', [HomeAccountController::class, 'SubNow'])
     ->name('android.startSub');
+
+Route::post('/Android/Start-like', [HomeAccountController::class, 'LikeNow'])
+    ->name('android.startLike');
+
+Route::post('/Android/Start-share', [HomeAccountController::class, 'ShareNow'])
+    ->name('android.startShare');
+
 
 Route::get('Android/SyncAllFanpage', [HomeAccountController::class, 'syncAllFanpage'])
     ->name('android.syncAllFanpage');
+
+Route::get('/multi_message_comment_page', [HomeAccountController::class, 'multiMessageCommentPage'])->name('facebook.multi_message_comment_page');
+
+Route::get('Android/Show-more-message/{uid}', [HomeAccountController::class, 'showMoreMessage'])
+    ->where('uid', '.*')
+    ->name('android.showMoreMessage');
 
 
 //AccountInfo Controller  (Thực hiện các tác vụ tương tác với thông tin cá nhân)
@@ -100,7 +113,7 @@ Route::post('/Android/Join-groups/{uid}', [AndroidController::class, 'joinGroup'
 Route::post('/Android/Accept-friend/{uid}', [AndroidController::class, 'acceptFriend'])
     ->where('uid', '.*')
     ->name('profile.acceptFriend');
-    
+
 Route::post('/Android/like-follow/{uid}', [AndroidController::class, 'likeFollow'])
     ->where('uid', '.*')
     ->name('profile.likeFollow');

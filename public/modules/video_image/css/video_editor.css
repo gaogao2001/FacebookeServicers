@@ -1,0 +1,318 @@
+:root {
+    --ruler-offset-left: 80px;
+    --ruler-offset-right: 80px;
+    --cursor-width: 80px;
+    --ruler-color: rgba(73, 73, 73, 0.4);
+}
+
+#topPart {
+    height: 33%;
+    min-height: 220px;
+}
+
+.btn-add {
+    position: absolute;
+    top: 20px;
+    left: 2px;
+    color: #0d6efd;
+    font-size: xx-large;
+    cursor: pointer;
+}
+
+.sticky-top {
+    background-color: white;
+}
+
+.ruler-wrapper {
+    padding-left: calc(var(--ruler-offset-left) - 2px);
+    padding-right: calc(var(--ruler-offset-right) - 2px);
+}
+
+.ruler {
+    height: 36px;
+    border-bottom: 1px solid darkgray;
+    background-image:
+        linear-gradient(180deg,
+            #ffffff 70%,
+            transparent 70%),
+        linear-gradient(90deg,
+            transparent 0%,
+            rgba(73, 73, 73, 0.4) 0%,
+            rgba(73, 73, 73, 0.4) 2%,
+            transparent 2%,
+
+            transparent 10%,
+            rgba(73, 73, 73, 0.4) 10%,
+            rgba(73, 73, 73, 0.4) 12%,
+            transparent 12%,
+
+            transparent 20%,
+            rgba(73, 73, 73, 0.4) 20%,
+            rgba(73, 73, 73, 0.4) 22%,
+            transparent 22%,
+
+            transparent 30%,
+            rgba(73, 73, 73, 0.4) 30%,
+            rgba(73, 73, 73, 0.4) 32%,
+            transparent 32%,
+
+            transparent 40%,
+            rgba(73, 73, 73, 0.4) 40%,
+            rgba(73, 73, 73, 0.4) 42%,
+            transparent 42%,
+
+            transparent 50%,
+            rgba(73, 73, 73, 0.4) 50%,
+            rgba(73, 73, 73, 0.4) 52%,
+            transparent 52%,
+
+            transparent 60%,
+            rgba(73, 73, 73, 0.4) 60%,
+            rgba(73, 73, 73, 0.4) 62%,
+            transparent 62%,
+
+            transparent 70%,
+            rgba(73, 73, 73, 0.4) 70%,
+            rgba(73, 73, 73, 0.4) 72%,
+            transparent 72%,
+
+            transparent 80%,
+            rgba(73, 73, 73, 0.4) 80%,
+            rgba(73, 73, 73, 0.4) 82%,
+            transparent 82%,
+
+            transparent 90%,
+            rgba(73, 73, 73, 0.4) 90%,
+            rgba(73, 73, 73, 0.4) 92%,
+            transparent 92%);
+    background-size: 30px 22px;
+    background-repeat: repeat-x;
+    background-position: 0px 13px;
+}
+
+.ruler .unit {
+    font-size: smaller;
+    color: gray;
+    position: absolute;
+    top: 5px;
+    height: 30px;
+    background-image:
+        linear-gradient(180deg,
+            #ffffff 50%,
+            transparent 50%),
+        linear-gradient(90deg,
+            var(--ruler-color) 0%,
+            var(--ruler-color) 5%,
+            transparent 6%);
+    width: 2em;
+    ;
+}
+
+
+.timer {
+    border: 1px solid gray;
+    border-radius: 5px;
+    padding: 0px 2px;
+    font-size: small;
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.75);
+}
+
+.left {
+    left: 0;
+}
+
+.right {
+    right: 0;
+}
+
+.cursor {
+    position: absolute;
+    top: 19px;
+    width: var(--cursor-width);
+    cursor: grab;
+    height: auto;
+    left: calc(2px + var(--cursor-width) * -0.5);
+}
+
+.cursor .symbol {
+    position: absolute;
+    left: calc(50% - 8px);
+    border-bottom: 8px solid black;
+    border-right: 8px solid black;
+    width: 12px;
+    height: 12px;
+    rotate: 45deg;
+    border-style: outset;
+}
+
+.cursor .currentValue {
+    position: absolute;
+    top: -19px;
+}
+
+video {
+    /* override other styles to make responsive */
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.timeline {
+    overflow-x: hidden;
+    overflow-y: scroll;
+    position: relative;
+    background-color: white;
+}
+
+.cursor-timeline {
+    border-left: 1px solid black;
+    width: 1px;
+    position: absolute;
+    left: calc(var(--ruler-offset-left) - 2px);
+    z-index: 10;
+    /* height will be computed in javascript */
+}
+
+.h-line {
+    background-image:
+        linear-gradient(0deg,
+            rgba(73, 73, 73, 0.5) 0,
+            rgba(73, 73, 73, 0.5) 5%,
+            transparent 6%);
+}
+
+.h-line:hover {
+    background-color: #dae4f7;
+}
+
+.item {
+    position: relative;
+    border-left: 1px solid rgba(73, 73, 73, 0.5);
+    border-right: 1px solid rgba(73, 73, 73, 0.5);
+    cursor: pointer;
+    /* border top */
+    background-image: linear-gradient(0deg,
+            rgba(73, 73, 73, 0.5) 0,
+            rgba(73, 73, 73, 0.5) 3%,
+            transparent 6%);
+    background-color: #5480D3;
+    /* dynamic*/
+    width: 40px;
+    left: 55px;
+    height: 26px;
+}
+
+.item.selected {
+    background: repeating-linear-gradient(45deg,
+            #606dbc,
+            #606dbc 10px,
+            #465298 10px,
+            #465298 20px);
+}
+
+.item:hover {
+    border-left: 2px solid rgba(73, 73, 73, 0.5);
+    border-right: 2px solid rgba(73, 73, 73, 0.5);
+}
+
+.item .title {
+    font-size: smaller;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    color: white;
+    padding-top: 2px;
+    padding-left: 2px;
+}
+
+button.dropdown-toggle {
+    padding: 0px 2px;
+    font-size: smaller;
+}
+
+.dropdown .dropdown-content {
+    display: none;
+    position: absolute;
+    top: -2px;
+    z-index: 15;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown-menu {
+    font-size: smaller;
+}
+
+.wrapper {
+    background: transparent;
+    border: 2px solid rgba(225, 225, 225, .2);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 10px rgba(0, 0, 0, .2);
+    color: #FFFFFF;
+    padding: 1px 1px;
+}
+
+.form-control {
+    width: 100%;
+    background-color: transparent;
+    color: #FFFFFF;
+    border: none;
+    outline: none;
+    border: 2px solid rgba(255, 255, 255, .2);
+    font-size: 16px;
+    padding: 20px;
+    box-shadow: #000000 0 0 10px;
+}
+
+.form-control:hover,
+.form-control:focus {
+    background-color: #FFFFFF;
+    color: black;
+}
+
+.mb-3 input[type="file"] {
+    padding-right: 10px;
+    /* Tạo khoảng trống giữa file chọn */
+}
+
+/* Sử dụng style từ Search_result.blade.php */
+#loadingOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100000;
+}
+
+.loader {
+    width: fit-content;
+    font-size: 40px;
+    font-family: system-ui, sans-serif;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #0000;
+    -webkit-text-stroke: 1px #fff;
+    background: linear-gradient(-60deg, #0000 45%, rgb(247, 120, 46) 0 55%, #0000 0) 0 / 300% 100% no-repeat text;
+    animation: l3 2s linear infinite;
+}
+
+.loader:before {
+    content: "Loading";
+}
+
+@keyframes l3 {
+    0% {
+        background-position: 100%;
+    }
+
+    100% {
+        background-position: 0;
+    }
+}

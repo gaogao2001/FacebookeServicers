@@ -107,7 +107,7 @@ class DeviceEmulatorController extends Controller
 
     public function postReels(Request $request)
     {
-       
+
         return $this->processRequest($request, 'postReels');
     }
 
@@ -117,7 +117,7 @@ class DeviceEmulatorController extends Controller
         $videoPath = $request->input('url');
         $content = $request->input('content');
 
-       
+
 
         $homeAccount = new HomeAccountController(
             $request,
@@ -143,8 +143,6 @@ class DeviceEmulatorController extends Controller
                     'message' => 'Bắt đầu Live Video thành công',
                     'data' => $resultStartLive
                 ], 200);
-
-               
             } else {
                 $thongTin['status'] = false;
                 $thongTin['message'] = 'Không thể thiết lập kết nối Device Android';
@@ -171,15 +169,15 @@ class DeviceEmulatorController extends Controller
         );
 
         $homeAccount->vailidateUids($uid);
-       
+
         if ($homeAccount->ConnectData) {
             $Accountuse = new FacebookAccount($homeAccount->getFacebookUse());
             if ($Accountuse->Connect) {
                 $_profile = new ProfileManager($Accountuse);
 
                 $resultStopLive = $_profile->StopLiveStreaming($videoId);
-            
-             
+
+
                 if ($resultStopLive) {
                     return response()->json([
                         'status' => true,
@@ -208,7 +206,7 @@ class DeviceEmulatorController extends Controller
         ]);
 
 
-   
+
         if ($inputs instanceof \Illuminate\Http\JsonResponse) {
             return $inputs;
         }
@@ -223,7 +221,7 @@ class DeviceEmulatorController extends Controller
             return response()->json(['response' => $thongTin], 200);
         }
         $relativePath = parse_url($inputs['url'], PHP_URL_PATH);
-    
+
         $path = $relativePath;
 
         if (!file_exists($path)) {
@@ -260,8 +258,8 @@ class DeviceEmulatorController extends Controller
             // dành cho trường hop account đang cấu hình là phien android APK
             if ($AccountType == 'profile') {
                 //profile
-                $AccountInfo = new AccountInfoController($request, $this->accountRepository , $this->fanpageManagerRepository);
-            
+                $AccountInfo = new AccountInfoController($request, $this->accountRepository, $this->fanpageManagerRepository);
+
                 $result = $AccountInfo->UploadReel($fileDataPath, trim($inputs['uid']), trim($inputs['content']));
                 return response()->json($result, 200);
             } else {
@@ -308,7 +306,7 @@ class DeviceEmulatorController extends Controller
         $relativePath = parse_url($inputs['url'], PHP_URL_PATH);
         $relativePath = str_replace('/FileData/', '', $relativePath);
         $path = config('file-path.base_path') . $relativePath;
-       
+
         if (!file_exists($path)) {
             return response()->json([
                 'status' => 'error',
@@ -317,7 +315,7 @@ class DeviceEmulatorController extends Controller
         }
         // kiểm tra xem loại tài khoản chạy đang là page hay profile
         $AccountType = 'profile';
-       
+
         if (!empty($account)) {
             if (!empty($account->MultiAccount)) {
                 foreach ($account->MultiAccount as $_account) {
@@ -344,13 +342,12 @@ class DeviceEmulatorController extends Controller
 
         if ($account->config_auto->session == 'android') {
             // dành cho trường hop account đang cấu hình là phien android APK
-           
+
             if ($AccountType == 'profile') {
                 //profile
                 $AccountInfo = new AccountInfoController($request, $this->accountRepository, $this->fanpageManagerRepository);
-              
-                $ResultUpload = $AccountInfo->SetAvatar($path, trim($inputs['uid']));
 
+                $ResultUpload = $AccountInfo->SetAvatar($path, trim($inputs['uid']));
             } else {
                 //page
                 $PageInfo = new PageInfoController($account, $this->fanpageManagerRepository);
@@ -380,6 +377,8 @@ class DeviceEmulatorController extends Controller
     public function RenewSession(Request $request)
     {
         $body = $request->all();
+
+
         if (empty($body['uid'])) {
             return response()->json([
                 'status' => 'error',
@@ -389,6 +388,7 @@ class DeviceEmulatorController extends Controller
 
         $uid = $body['uid'];
         $account = $this->accountRepository->findByUid($body['uid']);
+
         if (!$account) {
             return response()->json([
                 'status' => 'error',
@@ -397,11 +397,12 @@ class DeviceEmulatorController extends Controller
         }
         if ($account->config_auto->session == 'android') {
 
-           
+
             // dành cho trường hop account đang cấu hình là phien android APK
-            $AccountInfo = new AccountInfoController($request,  $this->accountRepository, $this->fanpageManagerRepository );
-            
+            $AccountInfo = new AccountInfoController($request,  $this->accountRepository, $this->fanpageManagerRepository);
+
             $AccountInfo->ReloadLoginAccount();
+
             
         } else if ($account->config_auto->session == 'mobile') {
             return response()->json([

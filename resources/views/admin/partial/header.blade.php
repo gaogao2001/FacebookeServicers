@@ -1,5 +1,30 @@
 <script src="{{ asset('modules/dashboard/js/dashboard.js') }}" defer></script>
+<style>
+    .navbar-nav .count {
+        /* Bỏ nền màu đỏ được áp dụng bởi bg-danger */
+        background-color: transparent !important;
+        /* Hiển thị số với màu đỏ */
+        color: red !important;
+        font-size: 14px;
+        font-weight: bold;
+        /* Nếu có padding hay border-radius cũ, cần xóa bỏ */
+        padding: 0;
+        border-radius: 0;
+    }
 
+    .navbar .navbar-menu-wrapper .count-indicator .count {
+        position: absolute;
+        left: 90%;
+        width: 12px;
+        height: 9px;
+        color: #ffffff;
+        border-radius: 100%;
+        text-align: center;
+        font-size: 0.825rem;
+        line-height: 1.5;
+        top: -4px;
+    }
+</style>
 <nav class="navbar p-0 fixed-top d-flex flex-row">
     <div class="navbar-brand-wrapper d-flex d-lg-none align-items-center justify-content-center">
         <a class="navbar-brand brand-logo-mini" href="index.html"><img src="/admin/assets/images/logo-mini.svg" alt="logo" /></a>
@@ -166,13 +191,13 @@
                         <img class="img-xs rounded-circle" src="/admin/assets/images/faces/face15.jpg" alt="">
                         @php
                         $account = session('account');
-                            if (!$account) {
-                            session()->flush();
-                            echo "<script>
-                                window.location.href = '/login';
-                            </script>";
-                            exit;
-                            }
+                        if (!$account) {
+                        session()->flush();
+                        echo "<script>
+                            window.location.href = '/login';
+                        </script>";
+                        exit;
+                        }
                         @endphp
                         <p class="mb-0 d-none d-sm-block navbar-profile-name">{{ $account['name'] ?? '' }}</p>
                         <i class="mdi mdi-menu-down d-none d-sm-block"></i>

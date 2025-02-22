@@ -1,4 +1,5 @@
 <?php
+//die();
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ERROR | E_PARSE);
@@ -18,22 +19,17 @@ use HoangquyIT\OpenCv\ImageDetectFace;
 
 
 $database = new HoangquyIT\MongoDB\Client("mongodb://localhost:27017");
-$collections = $database->NetworkControler->Setting;
-$FindNetworkConfig = $collections->findOne(['pppoe' => ['$exists' => true]]);
-if(empty($FindNetworkConfig->pppoe))
-{
-	die('Khong lay dc cau hinh chinh network');
-}
 $collections = $database->DataService->FollowUser;
 // Sử dụng aggregation pipeline với $sample để lấy ngẫu nhiên 1 dữ liệu
 $DataSubSelect = $collections->aggregate([
     ['$sample' => ['size' => 1]] // Lấy ngẫu nhiên 1 dữ liệu
-]);
-if(!empty($DataSubSelect))
+])->toArray();
+if(count($DataSubSelect) > 0)
 {
 	// chưa xử lý ghi log
 	foreach($DataSubSelect as $_selectUserSub)
 	{
+		$_selectUserSub = json_decode(json_encode($_selectUserSub));
 		// lấy thông tin chi tiết việc ra
 		$uid_sub = $_selectUserSub->uid_sub;// đối tượng cần chạy
 		$quantity = $_selectUserSub->quantity;// tổng số lượng sẽ chạy
@@ -87,24 +83,18 @@ if(!empty($DataSubSelect))
 				foreach ($FindAccount as $Account) {
 					echo 'Đưa account '.$Account->uid.' và xử lý kiểm tra kết nối mạng'.PHP_EOL;
 					$CheckConnect = $_Network->TestConnect($Account->networkuse);
-					//var_dump($Account->networkuse);
-					//var_dump($CheckConnect);
-					//die();
 					if(!$CheckConnect)
 					{
-						$collections = $database->History->FacebookHistory;
 						$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'kiểm tra kết nối interface die, tiến hành khởi tạo lại interface', 'status' => true, 'time' => date("Y/m/d H:i:s"));
-						$collections->insertOne($ArrayHistory);
-						
+						updateHistory($database, $ArrayHistory);
 						// trường hợp không kết nối được thử gen ip lai phát ko dc nữa thì hủy
-						$resultCreate = $_Network->CreateInterface($FindNetworkConfig->pppoe->interfaces);
+						$resultCreate = $_Network->CreateInterface($Account->networkuse->interface);
 						if(!$resultCreate->status)
 						{
 							// hủy làm viec do tạo cổng mạng thất bại
 							// khởi tạo array chứa dữ liệu thông tin của History
-							$collections = $database->History->FacebookHistory;
 							$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'lỗi khởi tạo lại proxy network, hủy làm việc', 'status' => true, 'time' => date("Y/m/d H:i:s"));
-							$collections->insertOne($ArrayHistory);
+							updateHistory($database, $ArrayHistory);
 							return;
 						}
 						$Account->networkuse->ip = $resultCreate->ip;
@@ -115,70 +105,60 @@ if(!empty($DataSubSelect))
 							['$set' => array('networkuse' => iterator_to_array($Account->networkuse))]
 						);
 						//
-						$collections = $database->History->FacebookHistory;
 						$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'Khởi tạo proxy network thành công !', 'status' => true, 'time' => date("Y/m/d H:i:s"));
-						$collections->insertOne($ArrayHistory);
+						updateHistory($database, $ArrayHistory);
 					}
 					else{
-						$collections = $database->History->FacebookHistory;
 						$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'Kết nối đến Proxy thành công', 'status' => true, 'time' => date("Y/m/d H:i:s"));
-						$collections->insertOne($ArrayHistory);
+						updateHistory($database, $ArrayHistory);
 					}
-					$collections = $database->History->FacebookHistory;
 					$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'Hoàn tất quá trình kiểm tra kết nối tiến hành làm việc, tiến hành kết nối giả lập Device', 'status' => true, 'time' => date("Y/m/d H:i:s"));
-					$collections->insertOne($ArrayHistory);
+					updateHistory($database, $ArrayHistory);
 					// chuyển đổi thông tin nick sang array kết nối vào giả lập
 					$FacebookUse = iterator_to_array($Account);
 					$Accountuse = new FacebookAccount($FacebookUse);
 					if ($Accountuse->Connect) {
-						$collections = $database->History->FacebookHistory;
 						$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'Thiết lập kết nối hệ thống thành công', 'status' => true, 'time' => date("Y/m/d H:i:s"));
-						$collections->insertOne($ArrayHistory);
+						updateHistory($database, $ArrayHistory);
 						//
 						$CheckConnect = new CheckConnect($Accountuse); // kết nối facebook
 						if ($CheckConnect->ConnectAccount) {
-							$collections = $database->History->FacebookHistory;
 							$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'Thiết lập Giả lập Device thành công !', 'status' => true, 'time' => date("Y/m/d H:i:s"));
-							$collections->insertOne($ArrayHistory);
+							updateHistory($database, $ArrayHistory);
 							//
 							// tiến hành kiểm tra thông tin để lấy live Avatar đang có để bảo đảm avatar luôn có cho từng nick 
 							$profile = new ProfileManager($Accountuse);
 							$_account = $profile->MyProfile();
 							if (!empty($_account->avatar)) {
-								$collections = $database->History->FacebookHistory;
 								$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'Lấy thông tin account từ facebook thành công, tiến hành kiểm tra avatar LIVE !', 'status' => true, 'time' => date("Y/m/d H:i:s"));
-								$collections->insertOne($ArrayHistory);
+								updateHistory($database, $ArrayHistory);
 								//
 								$DetectAvatar = new ImageDetectFace();
 								if(!$DetectAvatar->checkHumanFace($_account->avatar))
 								{
 									echo 'Nick '.$Account->uid.' chưa có avatar tiến hành upload avatar'.PHP_EOL;
-									$collections = $database->History->FacebookHistory;
 									$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'Phân tích thông tin avatar LIVE đang cho kết quả false nick chưa có avatar, tiến hành upload Avatar', 'status' => true, 'time' => date("Y/m/d H:i:s"));
-									$collections->insertOne($ArrayHistory);
+									updateHistory($database, $ArrayHistory);
 									// xử lý upload Avatar
 									// Đường dẫn tới thư mục cần quét
-									$directory = "/var/www/Images";
+									$directory = "/var/www/Avavatr";
 									$allImages = getAllImages($directory);
 									if (!empty($allImages)) {
 										$randomImage = $allImages[array_rand($allImages)];
-										$collections = $database->History->FacebookHistory;
 										$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'Tiến hành dùng ảnh '.$randomImage.' để làm avatar', 'status' => true, 'time' => date("Y/m/d H:i:s"));
-										$collections->insertOne($ArrayHistory);
+										updateHistory($database, $ArrayHistory);
 										//
 										$resultIdPhoto = $profile->UploadPhoto($randomImage);
 										if (!is_numeric($resultIdPhoto->message)) {
-											$collections = $database->History->FacebookHistory;
 											$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'Upload File '.$randomImage.' thất bại', 'status' => true, 'time' => date("Y/m/d H:i:s"));
-											$collections->insertOne($ArrayHistory);
+											updateHistory($database, $ArrayHistory);
 										}
-										
+										//
 										$resultSetAvatar = $profile->SetAvatarAccount($resultIdPhoto->message);
 										if($resultSetAvatar)
 										{
-											$collections = $database->History->FacebookHistory;
 											$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'Upload File '.$randomImage.' thành công với id là '.$resultIdPhoto->message.' đã thiết lập Avatar xong', 'status' => true, 'time' => date("Y/m/d H:i:s"));
-											$collections->insertOne($ArrayHistory);
+											updateHistory($database, $ArrayHistory);
 											//
 											$profile = new ProfileManager($Accountuse);
 											$ProfileInfo = $profile->MyProfile();
@@ -193,16 +173,15 @@ if(!empty($DataSubSelect))
 										}
 									}
 									else{
-										$collections = $database->History->FacebookHistory;
 										$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'Không có dữ liệu ảnh để upload làm avatar', 'status' => true, 'time' => date("Y/m/d H:i:s"));
-										$collections->insertOne($ArrayHistory);
+										updateHistory($database, $ArrayHistory);
+										return ;
 									}
 								}
 								else{
 									echo 'Nick '.$Account->uid.' đã sẵn có avatar không cần upload'.PHP_EOL;
-									$collections = $database->History->FacebookHistory;
 									$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'Tài khoản đã có avatar không cần cập nhật', 'status' => true, 'time' => date("Y/m/d H:i:s"));
-									$collections->insertOne($ArrayHistory);
+									updateHistory($database, $ArrayHistory);
 								}
 							}
 							//
@@ -211,13 +190,14 @@ if(!empty($DataSubSelect))
 							$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'Nick có đủ thông tin avatar phù hợp cho việc Sub user tiến hành đi Sub User theo chỉ định !', 'status' => true, 'time' => date("Y/m/d H:i:s"));
 							$collections->insertOne($ArrayHistory);
 							//tiến hành xử lý chay sub theo uid chỉ định
-							// kiểm tra dữ liệu đối tượng cần follow 
-							if($follow_start < 1 || $follow_stop < 1)
+							// kết nối facebook xin thông tin đối tượng
+							$resultUser = $profile->LoadInfoUserByUID($uid_sub);
+							if($resultUser->status)
 							{
-								// kết nối facebook xin thông tin đối tượng
-								$resultUser = $profile->LoadInfoUserByUID($uid_sub);
-								if($resultUser->status)
+								// kiểm tra dữ liệu đối tượng cần follow 
+								if($follow_start < 1 || $follow_stop < 1)
 								{
+									// trường hop này thì db chưa có dữ liệu do mới chạy nên sẽ update
 									$follow_start = intval($resultUser->follow);
 									$follow_stop = intval($follow_start) + intval($quantity);
 									$collections = $database->DataService->FollowUser;
@@ -226,48 +206,57 @@ if(!empty($DataSubSelect))
 										['$set' => array('follow_start' => $follow_start, 'follow_stop' => $follow_stop)]
 									);
 									//
-									$collections = $database->History->FacebookHistory;
 									$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'Vừa tiến hành cập nhật thông tin đối tượng cần sub cho hệ thống', 'status' => true, 'time' => date("Y/m/d H:i:s"));
-									$collections->insertOne($ArrayHistory);
+									updateHistory($database, $ArrayHistory);
 								}
-							}
-							if($resultUser = $profile->FollowUser($uid_sub))
-							{
-								echo 'Nick '.$Account->uid.' đã thực hiện sub đối tượng thành công !'.PHP_EOL;
-								$collections = $database->History->FacebookHistory;
-								$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'Vừa thực hiện Follow User theo Kịch Bản Khai Thác Nick thành công !', 'status' => true, 'time' => date("Y/m/d H:i:s"));
-								$collections->insertOne($ArrayHistory);
-								//
-								$collections = $database->DataService->FollowUser;
-								$collections->updateOne(
-									["uid_sub" => $uid_sub],
-									['$set' => array('last_run' => date("Y/m/d H:i:s"), 'today_run' => $today_run + 1)]
-								);
-							}
-							else{
-								echo 'Nick '.$Account->uid.' đã thực hiện sub đối tượng thất bại !'.PHP_EOL;
-								$collections = $database->History->FacebookHistory;
-								$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'Vừa thực hiện Follow User theo Kịch Bản Khai Thác Nick thất bại !', 'status' => true, 'time' => date("Y/m/d H:i:s"));
-								$collections->insertOne($ArrayHistory);
+								// tiến hành so sánh dữ liệu để quyết định có follow hay không hoac là dừng hẳn
+								if(intval($resultUser->follow)>=$follow_start)
+								{
+									// nghĩa là chưa đủ hoặc vừa đủ cho dư 1 2 cái không sao
+									if($resultUser = $profile->FollowUser($uid_sub))
+									{
+										echo 'Nick '.$Account->uid.' đã thực hiện sub đối tượng thành công !'.PHP_EOL;
+										$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'Vừa thực hiện Follow User theo Kịch Bản Khai Thác Nick thành công !', 'status' => true, 'time' => date("Y/m/d H:i:s"));
+										updateHistory($database, $ArrayHistory);
+										//
+										$collections = $database->DataService->FollowUser;
+										$collections->updateOne(
+											["uid_sub" => $uid_sub],
+											['$set' => array('last_run' => date("Y/m/d H:i:s"), 'today_run' => $today_run + 1)]
+										);
+									}
+									else{
+										echo 'Nick '.$Account->uid.' đã thực hiện sub đối tượng thất bại !'.PHP_EOL;
+										$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'Vừa thực hiện Follow User theo Kịch Bản Khai Thác Nick thất bại !', 'status' => true, 'time' => date("Y/m/d H:i:s"));
+										updateHistory($database, $ArrayHistory);
+									}
+								}
+								else{
+									echo 'Nick '.$Account->uid.' dừng việc sub đối tượng và hủy toàn bộ tiến trình sub cho đối tượng do đã đủ số lượng !'.PHP_EOL;
+									$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'Dừng việc sub đối tượng và hủy toàn bộ tiến trình sub cho đối tượng do đã đủ số lượng !', 'status' => true, 'time' => date("Y/m/d H:i:s"));
+									updateHistory($database, $ArrayHistory);
+									return;
+								}
+							} else {
+								$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'Khong lay duoc thong tin doi tuong ', 'status' => true, 'time' => date("Y/m/d H:i:s"));
+								updateHistory($database, $ArrayHistory);
+								return ;
 							}
 						}
 						else{
-							$collections = $database->History->FacebookHistory;
 							$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'Thiết lập Giả lập Device thất bại có vẻ nick CHECKPOINT !', 'status' => true, 'time' => date("Y/m/d H:i:s"));
-							$collections->insertOne($ArrayHistory);
+							updateHistory($database, $ArrayHistory);
 						}
 					}
 					else{
-						$collections = $database->History->FacebookHistory;
 						$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'Thiết lập kết nối hệ thống thất bại, khả năng die phiên hoặc die nick', 'status' => true, 'time' => date("Y/m/d H:i:s"));
-						$collections->insertOne($ArrayHistory);
+						updateHistory($database, $ArrayHistory);
 					}
 					// remove ket noi mang
-					$collections = $database->History->FacebookHistory;
 					$ArrayHistory = array('uid' => $Account->uid, 'action' => 'sub user', 'message' => 'Hoàn tất công việc tiến hành gỡ bỏ ip khỏi cổng mạng', 'status' => true, 'time' => date("Y/m/d H:i:s"));
-					$collections->insertOne($ArrayHistory);
+					updateHistory($database, $ArrayHistory);
 					//
-					$_Network->RemoveInterface($FindNetworkConfig->pppoe->interfaces, $Account->networkuse->ip);
+					$_Network->RemoveInterface($Account->networkuse->interface, $Account->networkuse->ip);
 				}
 			}
 			else{
@@ -283,9 +272,10 @@ if(!empty($DataSubSelect))
 }
 else{
 	echo 'không lấy dc dữ lieu khi chay sub'.PHP_EOL;
+	die('hccccccccccode');
 }
 
-
+die('het code');
 function getAllImages($directory)
 {
     $images = [];
@@ -306,5 +296,9 @@ function getAllImages($directory)
     return $images;
 }
 
-
+function updateHistory($database, $ArrayInput)
+{
+	$collections = $database->History->FacebookHistory;
+	$collections->insertOne($ArrayInput);
+}
 ?>

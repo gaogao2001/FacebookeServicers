@@ -23,31 +23,31 @@ $(document).ready(function () {
     // Tạo ánh xạ từ URL đến tên menu với URL chuẩn hóa
     function buildUrlToMenuNameMapping(menuMapping) {
         const urlToMenuName = {};
-    
+
         function processMenu(menu) {
             Object.keys(menu).forEach(menuName => {
                 const menuItem = menu[menuName];
-    
+
                 if (menuItem.url) {
                     // Chuẩn hóa URL và ánh xạ với tên menu
                     const normalizedUrl = normalizeUrl(menuItem.url);
                     urlToMenuName[normalizedUrl] = menuName;
                 }
-    
+
                 // Xử lý children nếu có
                 if (menuItem.children) {
                     processMenu(menuItem.children);
                 }
             });
         }
-    
+
         processMenu(menuMapping);
         return urlToMenuName;
     }
-    
+
     // Tạo ánh xạ từ URL đến tên menu
     const urlToMenuName = buildUrlToMenuNameMapping(menuMapping);
-    console.log('urlToMenuName:', urlToMenuName);
+
 
     function showAlert(type, message) {
         if (!message || typeof message !== 'string') {
@@ -62,19 +62,20 @@ $(document).ready(function () {
         });
     }
 
+    // Xử lý sự kiện chọn tất cả menu
+
+
     // Hàm tải danh sách các role
     function loadRoles() {
         $.ajax({
             url: '/roles',
             method: 'GET',
             success: function (roles) {
-                console.log('Roles received from server:', roles);
+
                 const roleList = $('#roleList');
                 roleList.empty();
 
                 roles.forEach(role => {
-                    console.log('Processing role:', role.name);
-                    console.log('role.menu:', role.menu);
 
                     const menuNames = role.menu.map(route => {
                         const normalizedRoute = normalizeUrl(route);
@@ -167,7 +168,6 @@ $(document).ready(function () {
             }).get()
         };
 
-        console.log('FormData:', formData);
 
         const method = roleId ? 'PUT' : 'POST';
         const url = roleId ? `/roles/${roleId}` : '/roles';
@@ -188,5 +188,9 @@ $(document).ready(function () {
                 showAlert('error', 'Đã xảy ra lỗi: ' + JSON.stringify(errors));
             }
         });
+    });
+
+    $('#selectAllMenu').on('change', function () {
+        $('.menu-checkbox').prop('checked', $(this).is(':checked'));
     });
 });

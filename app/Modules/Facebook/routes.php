@@ -40,5 +40,5 @@ Route::middleware([SessionTimeout::class])->group(function () {
     Route::post('/facebook/update_networkuse_by_proxy_list', [FacebookController::class, 'updateNetworkUseByProxyList'])->name('facebook.update_networkuse_by_proxy_list');
 
     //message
-    Route::get('/multi_message_comment_page', [FacebookController::class, 'multiMessageCommentPage'])->name('facebook.multi_message_comment_page');
+    //Route::get('/multi_message_comment_page', [FacebookController::class, 'multiMessageCommentPage'])->name('facebook.multi_message_comment_page');
 });

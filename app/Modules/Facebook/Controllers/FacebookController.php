@@ -343,12 +343,10 @@ class FacebookController extends Controller
             // Kiểm tra kết quả trả về
             if (in_array($resultCheck, ['LIVE', 'CHECKPOINT'])) {
                 // Tìm tài khoản theo UID thông qua Repository
-                $existingAccount = $this->accountRepository->findByUid($uid);
 
-                if ($existingAccount) {
-                    // Cập nhật trạng thái tài khoản thông qua Repository
-                    $this->accountRepository->updateStatus($uid, $resultCheck);
-                }
+                // Cập nhật trạng thái tài khoản thông qua Repository
+                $this->accountRepository->updateStatus($uid, $resultCheck);
+
 
                 return response()->json([
                     'response' => [
@@ -1230,27 +1228,27 @@ class FacebookController extends Controller
         }
     }
 
-    public function multiMessageCommentPage(Request $request)
-    {
+    // public function multiMessageCommentPage(Request $request)
+    // {
 
-        // Lấy dữ liệu từ request
-        $selectedAccounts = $request->input('selected_accounts', []);
-        $groupAccount = $request->input('group_account');
+    //     // Lấy dữ liệu từ request
+    //     $selectedAccounts = $request->input('selected_accounts', []);
+    //     $groupAccount = $request->input('group_account');
 
-        // Nếu có dữ liệu mảng uid được gửi
-        if (is_array($selectedAccounts) && count($selectedAccounts) > 0) {
-            $uids = $selectedAccounts;
-        } elseif (!empty($groupAccount)) {
-            // Nếu nhận group thì sử dụng phương thức findByGroup để lấy danh sách uid
-            $uids = $this->accountRepository->findByGroup($groupAccount);
-        } else {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Vui lòng chọn tài khoản hoặc nhóm tài khoản.'
-            ], 400);
-        }
+    //     // Nếu có dữ liệu mảng uid được gửi
+    //     if (is_array($selectedAccounts) && count($selectedAccounts) > 0) {
+    //         $uids = $selectedAccounts;
+    //     } elseif (!empty($groupAccount)) {
+    //         // Nếu nhận group thì sử dụng phương thức findByGroup để lấy danh sách uid
+    //         $uids = $this->accountRepository->findByGroup($groupAccount);
+    //     } else {
+    //         return response()->json([
+    //             'status'  => false,
+    //             'message' => 'Vui lòng chọn tài khoản hoặc nhóm tài khoản.'
+    //         ], 400);
+    //     }
 
-        // Trả về view với biến uids chứa mảng uid
-        return view('Facebook::Facebook.multi_message_comment_page', compact('uids'));
-    }
+    //     // Trả về view với biến uids chứa mảng uid
+    //     return view('Facebook::Facebook.multi_message_comment_page', compact('uids'));
+    // }
 }

@@ -126,6 +126,13 @@
                     <div class="card-body" style="overflow-y: auto;">
                         <h4 class="card-title">Các quyền được thực hiện</h4>
                         <hr>
+                        <div class="form-check" style="margin-bottom: 10px;">
+                            <label class="form-check-label">
+                                <input type="checkbox" id="selectAllMenu" class="form-check-input">
+                                Chọn tất cả quyền hạng
+                            </label>
+                        </div>
+                        <hr>
                         <div class="row">
                             @foreach(array_chunk($menus, ceil(count($menus) / 2), true) as $menuChunk)
                                 <div class="col-md-6">
@@ -134,7 +141,7 @@
                                             @if(isset($route['url']))
                                                 <div class="form-check">
                                                     <label class="form-check-label">
-                                                        <input type="checkbox" class="form-check-input"
+                                                        <input type="checkbox" class="form-check-input menu-checkbox"
                                                             name="menu[]"
                                                             value="{{ '/' . ltrim($route['url'], '/') }}"
                                                             class="menu-checkbox">
@@ -147,7 +154,7 @@
                                                     @if(isset($childRoute['url']))
                                                         <div class="form-check" >
                                                             <label class="form-check-label">
-                                                                <input type="checkbox" class="form-check-input"
+                                                                <input type="checkbox"class="form-check-input menu-checkbox"
                                                                     name="menu[]"
                                                                     value="{{ '/' . ltrim($childRoute['url'], '/') }}"
                                                                     class="menu-checkbox">

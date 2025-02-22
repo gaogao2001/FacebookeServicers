@@ -158,6 +158,12 @@
                         <strong>Xem trước lệnh Crontab:</strong>
                         <pre id="crontab-preview">* * * * * echo 'Hello World'</pre>
                     </div>
+                    <div class="row mb-3">
+                        <label class="col-sm-2 col-form-label">Số lượng:</label>
+                        <div class="col-sm-10">
+                            <input type="number" id="quantity" name="quantity" class="form-control" value="1" min="1" placeholder="Nhập số lượng">
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
@@ -515,6 +521,7 @@
         }
 
         let fullCommand = `${minute} ${hour} ${day} ${month} ${weekday} ${commandInput}`;
+        let quantity = $('#quantity').val() || 1;
 
         
         let index = $('#cronId').val();
@@ -522,7 +529,8 @@
         let type = index ? 'PUT' : 'POST';
         let data = {
             _token: '{{ csrf_token() }}',
-            command: fullCommand
+            command: fullCommand,
+            quantity: quantity
         };
 
         $.ajax({

@@ -84,7 +84,9 @@ class CrontabController extends Controller
     public function submitCronTab(Request $request)
     {
         $command = $request->input('command');
+        $quantity = (int) $request->input('quantity', 1);
 
+        
         // Kiểm tra lệnh nhập vào
         if (empty($command)) {
             return response()->json([
@@ -92,16 +94,14 @@ class CrontabController extends Controller
                 'message' => 'Command is required.'
             ]);
         }
-
         // Thoát ký tự đặc biệt để tránh lỗi shell injection
         $escapedCommand = escapeshellarg($command);
-
         // Lệnh thêm cron job
         $fullCommand = "(crontab -l 2>/dev/null; echo $escapedCommand) | crontab -";
-
         // Thực thi lệnh trên shell
-        shell_exec($fullCommand);
-
+        for ($i = 0; $i < $quantity; $i++) {
+            shell_exec($fullCommand);
+        }
         // Gọi hàm lấy danh sách cron jobs
         $crontabArray = $this->getCrontabList();
 

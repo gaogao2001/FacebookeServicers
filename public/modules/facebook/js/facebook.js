@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <tr>
                     <td><input type="checkbox" class="checkItem" value="${item.uid}"></td>
                         <td>${globalIndex}</td>
-                        <td>${item.uid}</td>
+                        <td><a href="https://facebook.com/${item.uid}" target="_blank">${item.uid}</a></td>
                         <td>${item.fullname ?? 'N/A'}</td>
                         <td>${item.birthday ?? 'N/A'}</td>
                         <td>${item.friends?.count ?? 0}</td>
@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 </div>
                             </div>
                             <div class="d-flex flex-column">
-                                <a href="/facebook-show-json/${item._id.$oid}" class="btn btn-light btn-sm btn-edit mb-2" style="padding: 3px; width: 82%;">Xem Json</a>
+                                <a target="_blank" href="/facebook-show-json/${item._id.$oid}" class="btn btn-light btn-sm btn-edit mb-2" style="padding: 3px; width: 82%;">Xem Json</a>
                             </div>
                             <div class="d-flex justify-content-between edit-delete">
                                 <a href="/facebook-edit/${item._id.$oid}" class="btn btn-info btn-sm btn-edit" style="padding: 3px; flex: 1; margin-right: 5px;">Edit</a>
@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <tr>
                          <td><input type="checkbox" name="select[]" value="${account._id.$oid}"></td>
                             <td>${globalIndex}</td>
-                            <td>${account.uid || 'N/A'}</td>
+                            <td><a href="https://facebook.com/${account.uid}" target="_blank">${account.uid}</a></td>
                             <td>${account.fullname || 'N/A'}</td>
                             <td>${account.birthday || 'N/A'}</td>
                             <td>${account.friends?.count || account.friends || 0}</td>

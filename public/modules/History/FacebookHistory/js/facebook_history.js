@@ -19,7 +19,26 @@ document.addEventListener('DOMContentLoaded', function () {
     const loadingIndicator = document.getElementById('loading');
     const paginationContainer = document.getElementById('pagination');
 
-
+    // Hàm cập nhật tiêu đề với số lượng History
+    function updateHistoryCountTitle() {
+        $.ajax({
+            url: '/history',
+            method: 'GET',
+            dataType: 'json',
+            data: { page: 1 },
+            success: function (data) {
+                if (data.data) {
+                    // Lấy tổng số mục history
+                    const totalCount = data.data.length;
+                    document.getElementById('facebookHistoryCountTitle').innerText =
+                        `Quản lí History (${totalCount})`;
+                }
+            },
+            error: function (error) {
+                console.error('Error updating history count title:', error);
+            }
+        });
+    }
 
     function loadHistory(page = 1) {
         if (isLoading) return;
@@ -44,7 +63,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         <td class="truncate-message">${item.message ? item.message : 'null'}</td>
                         <td>${item.time}</td>
                         <td>
-                            <button type="button" class="btn btn-inverse-danger btn-fw deleteBtn" data-id="${item._id.$oid}"><i class="fa fa-trash"></i> Xóa</button>
+                            <button type="button" class="btn btn-inverse-danger btn-fw deleteBtn" data-id="${item._id.$oid}">
+                                <i class="fa fa-trash"></i> Xóa
+                            </button>
                         </td>
                     `;
                     historyList.appendChild(row);
@@ -59,6 +80,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Cập nhật trạng thái nút "Delete All"
                 toggleDeleteAllButton();
 
+                // Cập nhật tiêu đề với số lượng History
+                updateHistoryCountTitle();
+
                 loadingIndicator.style.display = 'none';
                 isLoading = false;
             },
@@ -69,8 +93,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-
-
 
     // Load history on page load
     loadHistory(currentPage);

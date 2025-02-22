@@ -19,6 +19,10 @@ use HoangquyIT\NetworkControler\NetworkControler;
 use Illuminate\Pagination\LengthAwarePaginator;
 use HoangquyIT\ModelFacebook\Android\Groups\GroupsManager;
 use HoangquyIT\ModelFacebook\Android\Marketplace\MainMarketplace;
+use HoangquyIT\ModelFacebook\Android\Message\MessageControler;
+use App\InterfaceModules\DeviceEmulator\Android\Controllers\DeviceEmulatorController;
+
+
 
 class HomeAccountController extends Controller
 {
@@ -222,7 +226,6 @@ class HomeAccountController extends Controller
         return compact('url', 'uid');
     }
 
-
     public function Home(Request $request, $uid)
     {
         if ($this->ConnectData) {
@@ -238,8 +241,8 @@ class HomeAccountController extends Controller
                     $Main = new MainControler($Accountuse); // ket noi class dung de lay thong tin ban tin facebook
                     $profile = new ProfileManager($Accountuse); // ket noi class dung lay thong tin account facebook
                     $arrayUpdate = array('last_ip_connect' => $Accountuse->AccountInfo['last_ip_connect']);
-					$_account = $profile->OpenSecurityTwoFactor();
-					die('ssssssss');
+                    $_account = $profile->OpenSecurityTwoFactor();
+                    die('ssssssss');
                     $_account = $profile->MyProfile(); // tai day cho ra thong tin profile tai khoan facebook
                     if (!empty($_account->avatar)) {
                         // xu ly update thong tin url avatar nay vao mongodb 
@@ -340,7 +343,6 @@ class HomeAccountController extends Controller
         $end_cursor = $request->input('end_cursor', null);
         $typeFind   = $request->input('typeFind', null);
 
-
         $data = [
             'account' => $this->account,
         ];
@@ -351,8 +353,6 @@ class HomeAccountController extends Controller
                 $CheckConnect = new CheckConnect($Accountuse);
                 if ($CheckConnect->ConnectAccount) {
                     $Main = new MainControler($Accountuse);
-
-
 
                     if ($end_cursor && $typeFind) {
 
@@ -366,8 +366,6 @@ class HomeAccountController extends Controller
                         $pages  = $Main->SearchResultsGraphQL($KeySearch, 'page');
 
                         $data['FriendListAccept'] =  $Main->LoadRequestPending();
-
-
 
                         return view('Android::Search.Search_result', [
                             'data'      => $data,
@@ -402,7 +400,6 @@ class HomeAccountController extends Controller
         $this->vailidateUids($uid);
         if ($this->ConnectData) {
             $Accountuse = new FacebookAccount($this->FacebookUse);
-
 
             if ($Accountuse->Connect) {
 
@@ -504,7 +501,6 @@ class HomeAccountController extends Controller
         ], 200);
     }
 
-
     protected function startSub(Request $request, $uid)
     {
         $limit =  $request->input('limit');
@@ -580,5 +576,185 @@ class HomeAccountController extends Controller
             'status' => 'success',
             'data' => $results,
         ], 200);
+    }
+
+    public function LikeNow(Request $request)
+    {
+        $limit = $request->input('limit');
+        $uid_sub = $request->input('uid_sub');
+
+        dd($limit, $uid_sub);
+
+
+      
+    }
+
+    public function ShareNow(Request $request)
+    {
+        $limit = $request->input('limit');
+        $uid_sub = $request->input('uid_sub');
+
+        dd($limit, $uid_sub);
+    }
+
+
+    public function multiMessageCommentPage(Request $request)
+    {
+        // Lấy dữ liệu từ request
+        $selectedAccounts = $request->input('selected_accounts', []);
+        $groupAccount = $request->input('group_account');
+
+        // Nếu có dữ liệu mảng uid được gửi
+        if (is_array($selectedAccounts) && count($selectedAccounts) > 0) {
+            $uids = $selectedAccounts;
+        } elseif (!empty($groupAccount)) {
+            // Nếu nhận group thì sử dụng phương thức findByGroup để lấy danh sách uid
+            $uids = $this->accountRepository->findByGroup($groupAccount);
+        } else {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Vui lòng chọn tài khoản hoặc nhóm tài khoản.'
+            ], 400);
+        }
+        // Duyệt mảng uid để lấy thông tin tin nhắn
+        $data = [];
+        foreach ($uids as $uid) {
+            $response = $this->getMessageByUid($uid);
+            $messages = json_decode($response->getContent());
+           
+            $data[] = (object)[
+                'messages' => $messages->data,
+            ];
+        }
+        // Trả về view với biến uids chứa mảng uid
+        return view('Facebook::Facebook.multi_message_comment_page', compact('uids', 'data'));
+    }
+
+    protected function getMessageByUid($uid)
+    {
+        $this->vailidateUids($uid);
+
+        $requestForRenew = new Request();
+        $requestForRenew->replace(['uid' => $uid]);
+
+
+        if ($this->ConnectData) {
+            $Accountuse = new FacebookAccount($this->FacebookUse);
+            if ($Accountuse->Connect) {
+                $CheckConnect = new CheckConnect($Accountuse);
+
+                if ($CheckConnect->ConnectAccount) {
+                    // Use the aliased FBAccountManager
+                    $_account = new AccountManager($Accountuse);
+
+                    if (empty($Accountuse->AccountInfo['android_device_message']['access_token'])) {
+                        // Nếu chưa có phiên apk msg, tiến hành chuyển đổi từ apk fb sang apk msg
+                        $resultConvert = $_account->ConverSession('256002347743983');
+                        if ($resultConvert->status && !empty($resultConvert->session)) {
+                            $Accountuse->AccountInfo['android_device_message'] = $resultConvert->session;
+                            $this->accountRepository->update($this->_id->__toString(), [
+                                'android_device_message' => $resultConvert->session
+                            ]);
+                        }
+                    }
+
+                    // Sau khi đã chuyển đổi (dù thành hay không), gọi renewSession để cập nhật lại phiên
+                    $renewSession = new DeviceEmulatorController($this->accountRepository, $this->fanpageManagerRepository);
+                    $renewSession->renewSession($requestForRenew);
+
+                    $_Message = new MessageControler($Accountuse);
+
+                    $messages = $_Message->LoadAllMessage();
+                   
+
+                    return response()->json([
+                        'data' => $messages,
+                    ], 200);
+
+                    //print_r(json_encode($_Message->LoadMessageByUid('100028048535913')));
+                } else {
+                    $thongTin['status'] = false;
+                    $thongTin['message'] = 'Account đang bị CHECKPOINT';
+                    return response()->json(['response' => $thongTin], 200);
+                }
+            } else {
+                $thongTin['status'] = false;
+                $thongTin['message'] = 'Không thể thiết lập kết nối Device Android';
+                return response()->json(['response' => $thongTin], 200);
+            }
+        } else {
+            return response()->json([
+                'status' => 'error',
+                'message' => $this->Message
+            ], 200);
+        }
+    }
+
+    public function showMoreMessage(Request $request, $uid)
+    {
+        $uid_message = $request->input('uid_message');
+
+        if ($this->ConnectData) {
+            $Accountuse = new FacebookAccount($this->FacebookUse);
+            if ($Accountuse->Connect) {
+                $CheckConnect = new CheckConnect($Accountuse);
+
+                if ($CheckConnect->ConnectAccount) {
+
+                    $_Message = new MessageControler($Accountuse);
+
+                    $result =  $_Message->LoadMessageByUid($uid_message);
+
+                    if ($result) {
+                        $collection = app('mongo')->FacebookData->Messagers;
+
+                        $conversationData = [
+                            'uid'               => $uid,
+                            'uid_message'       => $uid_message,
+                            // Nếu muốn lưu trực tiếp dưới dạng mảng thì để $result,
+                            // hoặc dùng json_encode($result) nếu muốn lưu dưới dạng chuỗi JSON
+                            'conversation_data' => $result,
+                            'updated_at'        => new \MongoDB\BSON\UTCDateTime(now()->timestamp * 1000),
+                        ];
+
+                        $existingConversation = $collection->findOne([
+                            'uid'         => $uid,
+                            'uid_message' => $uid_message,
+                        ]);
+
+                        if ($existingConversation) {
+                            // Nếu cuộc hội thoại đã tồn tại thì cập nhật dữ liệu mới nhất
+                            $collection->updateOne(
+                                ['_id' => $existingConversation->_id],
+                                ['$set' => $conversationData]
+                            );
+                        } else {
+                            // Nếu chưa có, thêm mới
+                            $conversationData['created_at'] = new \MongoDB\BSON\UTCDateTime(now()->timestamp * 1000);
+                            $collection->insertOne($conversationData);
+                        }
+                    }
+
+
+                    return response()->json([
+                        'status' => 'success',
+                        'data' => $result
+                    ], 200);
+                } else {
+                    $thongTin['status'] = false;
+                    $thongTin['message'] = 'Account đang bị CHECKPOINT';
+                    return response()->json(['response' => $thongTin], 200);
+                }
+            } else {
+                $thongTin['status'] = false;
+                $thongTin['message'] = 'Không thể thiết lập kết nối Device Android';
+                return response()->json(['response' => $thongTin], 200);
+            }
+        } else {
+            return response()->json([
+                'status' => 'error',
+                'message' => $this->Message
+            ], 200);
+        }
     }
 }

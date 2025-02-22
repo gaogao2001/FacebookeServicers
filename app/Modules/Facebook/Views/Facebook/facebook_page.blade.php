@@ -159,7 +159,7 @@ use Carbon\Carbon;
                                     <tr>
                                         <td><input type="checkbox" class="checkItem" value="{{ $item->uid }}"></td>
                                         <td>{{ $sttStart + $index }}</td> <!-- Hiển thị STT -->
-                                        <td>{{ $item->uid }}</td>
+                                        <td><a href="https://facebook.com/{{ $item->uid }}" target="_blank">{{ $item->uid }}</a></td>
                                         <td>{{ $item->fullname ?? null }}</td>
                                         <td>{{ $item->birthday ?? null }}</td>
                                         <td>{{ $item->friends->count ?? 0 }}</td>
@@ -191,7 +191,7 @@ use Carbon\Carbon;
                                                 </div>
                                             </div>
                                             <div class="d-flex flex-column">
-                                                <a href="{{route('facebook.showJson' , $item->_id)}}" class="btn btn-light btn-sm btn-edit mb-2" style="padding: 3px;width: 100%;">Xem Json</a>
+                                                <a target="_blank" href="{{route('facebook.showJson' , $item->_id)}}" class="btn btn-light btn-sm btn-edit mb-2" style="padding: 3px;width: 100%;">Xem Json</a>
                                             </div>
                                             <div class="d-flex justify-content-between edit-delete">
                                                 <a href="{{ route('facebook.edit', $item->_id) }}" class="btn btn-info btn-sm btn-edit" style="padding: 3px; flex: 1; margin-right: 5px;">Edit</a>

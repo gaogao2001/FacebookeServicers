@@ -112,9 +112,9 @@
                                 <label for="contentTitle">Title</label>
                                 <input type="text" class="edit-form-control" id="contentTitle" name="title" required>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group" id="priceInputGroup" style="display: none;">
                                 <label for="contentPrice">Price</label>
-                                <input type="number" step="any" class="edit-form-control" id="contentPrice" name="price" placeholder="Nhập giá" required>
+                                <input type="number" step="any" class="edit-form-control" id="contentPrice" name="price" placeholder="Nhập giá">
                             </div>
                             <div class="form-group">
                                 <label>Đăng Lên</label>
@@ -128,6 +128,7 @@
                                     <option value="ChoTot">Chợ Tốt</option>
                                     <option value="Shopee">Shopee</option>
                                     <option value="TiktokProfile">Tiktok Profile</option>
+                                    <option value="FacebookReels">Facebook reels</option>
                                 </select>
                                 <div id="locationPicker" style="display: none; margin-top: 10px;">
                                     <button type="button" class="btn btn-primary" id="btnOpenMapModal">
@@ -140,10 +141,9 @@
                             <div class="form-group">
                                 <label for="contentImage">Hình ảnh</label>
                                 <input type="file" class="form-control" id="contentImage" name="img[]" accept="image/*" multiple style="color: #FFFFFF;">
-                                <div id="previewImages">
-                                </div>
-                                <div id="currentImages">
-                                </div>
+                                <button type="button" class="btn btn-info mt-2" id="btnFileManager">Chọn hình từ FileManager</button>
+                                <div id="previewImages"></div>
+                                <div id="currentImages"></div>
                             </div>
                             <div class="form-group">
                                 <label for="contentBody">Nội dung</label>
@@ -178,6 +178,22 @@
                 <!-- Nút xác nhận => cập nhật #latitude, #longitude form chính -->
                 <button class="btn btn-success" id="btnConfirmLocation">Xác nhận toạ độ</button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="fileManagerModal" tabindex="-1" role="dialog" aria-labelledby="fileManagerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Chọn hình từ File Manager</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <iframe  frameborder="0" style="width: 100%; height: 500px;"></iframe>
             </div>
         </div>
     </div>

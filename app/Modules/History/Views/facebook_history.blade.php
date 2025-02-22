@@ -41,7 +41,7 @@
         <div class="col-md-12 grid-margin">
             <div class="card wrapper">
                 <div class="card-body d-flex justify-content-between align-items-center">
-                    <h4 class="card-title mb-0" id="linkCountTitle" style="  color: #bfbfbf">Quản lí History</h4>
+                    <h4 class="card-title mb-0" id="facebookHistoryCountTitle" style="  color: #bfbfbf">Quản lí History</h4>
                 </div>
             </div>
         </div>

@@ -9,6 +9,8 @@ use App\Repositories\Roles\RoleRepository;
 use App\Repositories\SiteManager\SiteManagerRepositoryInterface;
 use App\Repositories\SiteManager\SiteManagerRepository;
 use Illuminate\Support\ServiceProvider;
+use App\Repositories\Notification\NotificationRepositoryInterface;
+use App\Repositories\Notification\NotificationRepository;
 
 class RepositoryServiceProvider extends ServiceProvider
 {
@@ -20,6 +22,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(AccountRepositoryInterface::class, AccountRepository::class);
         $this->app->bind(RoleRepositoryInterface::class, RoleRepository::class);
         $this->app->bind(SiteManagerRepositoryInterface::class, SiteManagerRepository::class);
+        $this->app->bind(NotificationRepositoryInterface::class, NotificationRepository::class);
     }
     /**
      * Bootstrap services.

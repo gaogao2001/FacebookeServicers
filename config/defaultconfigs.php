@@ -96,6 +96,13 @@ return [
                 "already_done" => 0,
                 "time_old" => date('d/m/Y H:i:s')
             ],
+            "auto_post_reels" => [
+                "auto" => false,
+                "min_time" => 200,
+                "action_limit" => 2,
+                "already_done" => 0,
+                "time_old" => date('d/m/Y H:i:s')
+            ],
         ]
     ],
     'defaultConfigFanpage' => [
@@ -160,6 +167,13 @@ return [
                 "time_old" => date('d/m/Y H:i:s')
             ],
             "share_post_to_profile_config" => [
+                "auto" => false,
+                "min_time" => 200,
+                "action_limit" => 2,
+                "already_done" => 0,
+                "time_old" => date('d/m/Y H:i:s')
+            ],
+            "auto_post_reels" => [
                 "auto" => false,
                 "min_time" => 200,
                 "action_limit" => 2,

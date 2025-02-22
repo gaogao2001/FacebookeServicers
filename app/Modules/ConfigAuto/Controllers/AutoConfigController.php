@@ -35,6 +35,8 @@ class AutoConfigController extends Controller
         $configFanpage = $dbConfigFanpage ?? $defaultConfigFanpage;
         $configZalo = $dbConfigZalo ?? $defaultConfigZalo;
 
+        // dd($defaultConfigFacebook, $defaultConfigFanpage, $defaultConfigFanpage);
+
 
         return view('ConfigAuto::auto_config_page', compact('configFacebook', 'configZalo', 'configFanpage'));
     }

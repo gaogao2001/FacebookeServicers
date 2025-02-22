@@ -33,6 +33,7 @@ require_once base_path('app/Modules/ServiceController/routes.php');
 require_once base_path('app/InterfaceModules/DeviceEmulator/Android/router.php');
 require_once base_path('app/Modules/CronTab/router.php');
 require_once base_path('app/Modules/ExploitationNow/routes.php');
+require_once base_path('app/Modules/Notification/routes.php');
 
 
 

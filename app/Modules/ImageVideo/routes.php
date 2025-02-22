@@ -26,4 +26,4 @@ Route::post('/get-video-by-url', [ImageVideoManagerController::class, 'getVideoB
 
 Route::post('/create-basic-video', [VideoCreatorController::class, 'createBasicVideo'])->name('createBasicVideo'); 
 Route::post('/create-video-with-audio', [VideoCreatorController::class, 'createVideoWithAudio']);
-Route::get('/extract-audio', [VideoCreatorController::class, 'extractAudio']);
+Route::post('/extract-audio', [VideoCreatorController::class, 'extractAudio']);

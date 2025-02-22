@@ -1,3 +1,4 @@
+
 @extends('admin.layouts.master')
 
 @section('title', 'Quản lí File')
@@ -189,4 +190,6 @@
         });
     });
 </script>
+
 @endsection
+
