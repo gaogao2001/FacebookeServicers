@@ -1,0 +1,91 @@
+/* CSS giữ nguyên */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Popins", sans-serif;
+}
+
+/* body {
+    background-image: url('/admin/assets/images/sprites/back-ground-4.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+} */
+
+.wrapper {
+    background: transparent;
+    border: 2px solid rgba(225, 225, 225, .2);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 10px rgba(0, 0, 0, .2);
+    color: #FFFFFF;
+    padding: 30px 40px;
+}
+
+.wrapper h1 {
+    font-size: 36px;
+    text-align: center;
+    color: #FFFFFF;
+}
+
+.zalo-edit-form-control {
+    width: 100%;
+    background-color: transparent;
+    color: #FFFFFF;
+    border: none;
+    outline: none;
+    border: 2px solid rgba(255, 255, 255, .2);
+    font-size: 16px;
+    padding: 20px;
+    box-shadow: #000000 0 0 10px;
+}
+
+.zalo-edit-form-control:hover,
+.zalo-edit-form-control:focus {
+    background-color: #FFFFFF;
+    color: #000000;
+}
+
+.zalo-edit-form-control::placeholder {
+    color: #FFFFFF;
+}
+
+.zalo-edit-form-control:hover::placeholder,
+.zalo-edit-form-control:focus::placeholder {
+    color: #000000;
+}
+
+.btn {
+    width: 100%;
+    height: 45px;
+    background: transparent;
+    border: none;
+    outline: none;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, .1);
+    cursor: pointer;
+    font-size: 16px;
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+.friends-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 20px;
+    justify-items: center;
+}
+
+.friend {
+    text-align: center;
+    width: 100%;
+    max-width: 150px;
+}
+
+.friend img {
+    width: 120px;
+    height: 120px;
+    border-radius: 10px;
+    object-fit: cover;
+    margin-bottom: 10px;
+}

@@ -1,0 +1,78 @@
+#currentImages {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+#currentImages .existing-image {
+    position: relative;
+    width: 16%;
+    aspect-ratio: 1/1;
+}
+
+#currentImages img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.remove-existing-image {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    color: black;
+    border: none;
+    border-radius: 50%;
+    font-size: 16px;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+}
+
+#previewImages {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.preview-image {
+    position: relative;
+    width: 16%;
+    aspect-ratio: 1/1;
+}
+
+.preview-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.remove-image {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    color: black;
+    border: none;
+    border-radius: 50%;
+    font-size: 16px;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+}
+
+.form-control {
+    color: white;
+    /* Màu chữ mặc định */
+}
+
+.form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+    /* Màu chữ placeholder */
+}
+
+.form-control:focus {
+    color: white;
+    /* Màu chữ khi input được focus */
+}

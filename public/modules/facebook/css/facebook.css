@@ -1,0 +1,295 @@
+/* CSS giữ nguyên */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Popins", sans-serif;
+}
+
+
+
+.wrapper {
+    background: transparent;
+    border: 2px solid rgba(225, 225, 225, .2);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 10px rgba(0, 0, 0, .2);
+    color: #FFFFFF;
+    padding: 1px 1px;
+}
+
+.wrapper h1 {
+    font-size: 36px;
+    text-align: center;
+    color: #FFFFFF;
+}
+
+.zalo-edit-form-control {
+    width: 100%;
+    background-color: transparent;
+    color: #FFFFFF;
+    border: none;
+    outline: none;
+    border: 2px solid rgba(255, 255, 255, .2);
+    font-size: 16px;
+    padding: 20px;
+    box-shadow: #000000 0 0 10px;
+}
+
+.zalo-edit-form-control:hover,
+.zalo-edit-form-control:focus {
+    background-color: #FFFFFF;
+    color: black;
+}
+
+
+
+
+.friends-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 20px;
+    justify-items: center;
+}
+
+.friend {
+    text-align: center;
+    width: 100%;
+    max-width: 150px;
+}
+
+.friend img {
+    width: 120px;
+    height: 120px;
+    border-radius: 10px;
+    object-fit: cover;
+    margin-bottom: 10px;
+}
+
+/* Giữ nguyên chiều rộng của table và các cột */
+.table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+/* Đảm bảo các ô không tự động mở rộng */
+.table th,
+.table td {
+    word-wrap: break-word;
+    /* Gãy chữ khi quá dài */
+    white-space: normal;
+    /* Không cho phép chữ tràn */
+    overflow: hidden;
+    /* Ẩn chữ vượt ra ngoài */
+    text-overflow: ellipsis;
+    /* Hiển thị "..." nếu cần */
+}
+
+/* Tùy chỉnh để giữ header cố định */
+.table thead th {
+    white-space: nowrap;
+    /* Không gãy chữ header */
+}
+
+
+@media (max-width: 768px) {
+    #faceAcountTable thead {
+        display: none;
+    }
+
+    #faceAcountTable,
+    #faceAcountTable tbody,
+    #faceAcountTable tr,
+    #faceAcountTable td {
+        display: block;
+        width: 100%;
+    }
+
+    #faceAcountTable tr {
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        padding: 10px;
+        border-radius: 5px;
+    }
+
+    #faceAcountTable td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+    }
+
+    #faceAcountTable td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 10px;
+        width: 45%;
+        padding-right: 10px;
+        font-weight: bold;
+        text-align: left;
+    }
+
+    /* Hover Effects */
+    #faceAcountTable tbody tr:hover {
+        background-color: #f1f1f1;
+    }
+
+    /* Clickable Rows */
+    #faceAcountTable tbody tr {
+        cursor: pointer;
+    }
+
+    /* Color Scheme */
+    #faceAcountTable {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    #faceAcountTable th,
+    #faceAcountTable td {
+        border: 1px solid #ddd;
+        padding: 8px;
+    }
+
+    #faceAcountTable th {
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    /* Alternate Row Colors */
+    #faceAcountTable tbody tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    #faceAcountTable tbody tr:nth-child(odd) {
+        background-color: #f1f1f1;
+    }
+
+
+    .dropdown .btn {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .btn-edit,
+    .btn-delete {
+        width: 150%;
+        margin-right: 0;
+        margin-bottom: 5px;
+    }
+
+    .btn-light {
+        width: 180%;
+    }
+
+
+    table {
+        table-layout: fixed;
+        width: 100%;
+    }
+
+    table td:nth-child(3),
+    table td:nth-child(4),
+    table td:nth-child(5) {
+        white-space: normal;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        /* max-width: ... nếu muốn khống chế thêm */
+    }
+
+    .form-control {
+        width: 100%;
+        background-color: transparent;
+        color: #FFFFFF;
+        border: none;
+        outline: none;
+        border: 2px solid rgba(255, 255, 255, .2);
+        font-size: 16px;
+        padding: 20px;
+        box-shadow: #000000 0 0 10px;
+    }
+
+    .form-control:hover,
+    .form-control:focus {
+        background-color: #FFFFFF;
+        color: #000000;
+    }
+
+    .form-control::placeholder {
+        color: #FFFFFF;
+    }
+
+    .form-control:hover::placeholder,
+    .form-control:focus::placeholder {
+        color: #000000;
+    }
+
+    /* Pagination Container */
+    .pagination-controls {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 20px 0;
+    }
+
+    /* Prev/Next Buttons */
+    .pagination-controls button {
+        background-color: #333;
+        /* Black background */
+        color: #fff;
+        /* White text */
+        border: none;
+        padding: 8px 12px;
+        margin: 0 5px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.2s ease-in-out;
+    }
+
+    .pagination-controls button:hover:not(:disabled) {
+        background-color: #555;
+        /* Darker hover effect */
+    }
+
+    .pagination-controls button:disabled {
+        background-color: #666;
+        /* Disabled state */
+        cursor: not-allowed;
+    }
+
+    /* Page Number Buttons */
+    #pageNumbers button {
+        background-color: #333;
+        /* Black background */
+        color: #fff;
+        /* White text */
+        border: none;
+        padding: 8px 12px;
+        margin: 0 2px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.2s ease-in-out;
+    }
+
+    #pageNumbers button:hover {
+        background-color: #555;
+        /* Hover effect for page buttons */
+    }
+
+    #pageNumbers button:disabled {
+        background-color: #777;
+        /* Active page */
+        color: #ddd;
+        cursor: default;
+    }
+
+    /* Ellipsis */
+    #pageNumbers span {
+        color: #fff;
+        /* White text for ellipsis */
+        font-size: 14px;
+        margin: 0 5px;
+    }
+
+
+}

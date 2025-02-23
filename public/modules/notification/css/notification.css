@@ -1,0 +1,85 @@
+.wrapper {
+    background: transparent;
+    border: 2px solid rgba(225, 225, 225, .2);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 10px rgba(0, 0, 0, .2);
+    color: #FFFFFF;
+    padding: 30px 40px;
+}
+
+/* Style cho bảng */
+#notificationTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#notificationTable th,
+#notificationTable td {
+    padding: 12px 15px;
+    vertical-align: middle;
+    border: 1px solid rgba(225, 225, 225, .2);
+}
+
+
+
+#notificationTable tr {
+    border-bottom: 1px solid rgba(225, 225, 225, .2);
+}
+
+#notificationTable th:last-child,
+#notificationTable td:last-child {
+    width: 150px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+#notificationTable th:nth-child(3),
+#notificationTable td:nth-child(3),
+#notificationTable th:nth-child(4),
+#notificationTable td:nth-child(4) {
+    width: 120px;
+    /* điều chỉnh width theo nhu cầu */
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+#notificationTable th:nth-child(6),
+#notificationTable td:nth-child(6) {
+    width: 80px;
+    /* điều chỉnh theo nhu cầu */
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+#notificationTable th:nth-child(1),
+#notificationTable td:nth-child(1) #notificationTable th:nth-child(2),
+#notificationTable td:nth-child(2) {
+    width: 10px;
+    /* điều chỉnh theo nhu cầu */
+}
+
+
+/* Giữ nguyên style cho message */
+.truncate-message {
+    max-width: 250px;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.truncate-message:hover {
+    white-space: normal;
+    overflow: visible;
+}
+
+/* Thêm khoảng cách giữa các phần khác nếu cần */
+.table-responsive {
+    margin-top: 20px;
+}
+
+td.btn.btn-inverse-success {
+    background-color: #28a745; /* hoặc màu mong muốn */
+    color: #fff;
+    border: none;
+}

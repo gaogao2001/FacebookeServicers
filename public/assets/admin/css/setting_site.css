@@ -1,0 +1,143 @@
+:root {
+    --theme-color: #007bff;
+    /* Mặc định */
+}
+
+/* Thiết lập panel */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    transition: background-image 0.3s ease, background-color 0.3s ease;
+    background-size: cover;
+    background-position: center;
+}
+
+/* Panel chính */
+#theme-panel {
+    position: fixed;
+    top: 100px;
+    right: -260px;
+    /* Panel vẫn giữ kích thước lớn */
+    width: 250px;
+    background-color: #fff;
+    border-radius: 8px 0 0 8px;
+    border: 1px solid #ddd;
+    z-index: 1050;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    font-family: Arial, sans-serif;
+    color: #333;
+}
+
+#theme-panel.open {
+    right: 0;
+}
+
+/* Nút mở/đóng panel */
+#toggle-panel {
+    position: absolute;
+    top: 50%;
+    left: -50px;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    background-color: #343a40;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+#toggle-panel:hover {
+    background-color: #007bff;
+}
+
+/* Nội dung panel */
+#panel-content {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.panel-title {
+    text-align: center;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+}
+
+.panel-section {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.panel-section label {
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-right: 5px;
+    flex: 1;
+}
+
+.panel-section input[type="color"],
+.panel-section input[type="file"] {
+    width: 60px;
+    height: 30px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.content-wrapper {
+    background-size: cover;
+    /* Ảnh phủ kín khu vực */
+    background-repeat: no-repeat;
+    /* Không lặp ảnh */
+    background-position: center;
+    /* Căn giữa ảnh */
+    transition: background 0.5s ease;
+    /* Hiệu ứng mượt khi thay đổi */
+}
+
+.wrapper {
+    background: transparent;
+    border: 2px solid rgba(225, 225, 225, .2);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 10px rgba(0, 0, 0, .2);
+    color: #FFFFFF;
+    padding: 30px 40px;
+}
+
+.wrapper h1 {
+    font-size: 36px;
+    text-align: center;
+    color: #FFFFFF;
+}
+
+
+
+#hide-toggle-panel {
+    display: none;
+    margin-top: 10px;
+    background-color: #343a40;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+/* to do list */

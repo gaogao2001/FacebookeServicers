@@ -1,0 +1,102 @@
+    .wrapper {
+        background: transparent;
+        border: 2px solid rgba(225, 225, 225, .2);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 0 10px rgba(0, 0, 0, .2);
+        color: #FFFFFF;
+        padding: 30px 40px;
+    }
+
+    .pagination-buttons {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .pagination-buttons button {
+        margin: 0 10px;
+    }
+
+    .search-container {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 20px;
+    }
+
+    .search-container input {
+        padding: 5px;
+        width: 200px;
+    }
+
+    /* Định dạng bảng có thanh cuộn nội bộ */
+    .table-responsive {
+        max-height: 500px;
+        /* Điều chỉnh chiều cao theo nhu cầu */
+        overflow-y: auto;
+    }
+
+    table {
+        table-layout: fixed;
+        width: 100%;
+    }
+
+    table th,
+    table td {
+        white-space: normal;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+
+    /* Hiển thị trạng thái trang */
+    #paginationStatus {
+        text-align: center;
+        margin-top: 10px;
+        color: #FFFFFF;
+    }
+
+    .table-responsive {
+        max-height: 500px;
+        overflow-y: auto;
+        overflow-x: auto;
+    }
+
+    /* CSS được tách từ file Blade */
+    .loader {
+        width: fit-content;
+        font-size: 40px;
+        font-family: system-ui, sans-serif;
+        font-weight: bold;
+        text-transform: uppercase;
+        color: #0000;
+        -webkit-text-stroke: 1px #fff;
+        background: linear-gradient(-60deg, #0000 45%, rgb(247, 120, 46) 0 55%, #0000 0) 0 / 300% 100% no-repeat text;
+        animation: l3 2s linear infinite;
+    }
+
+    .loader:before {
+        content: "Loading";
+    }
+
+    @keyframes l3 {
+        0% {
+            background-position: 100%;
+        }
+
+        100% {
+            background-position: 0;
+        }
+    }
+
+    #loadingOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 100000;
+        /* Đảm bảo z-index rất cao */
+    }
