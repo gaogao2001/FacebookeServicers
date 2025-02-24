@@ -254,7 +254,7 @@ button.dropdown-toggle {
     padding: 1px 1px;
 }
 
-.form-control {
+/* .form-control {
     width: 100%;
     background-color: transparent;
     color: #FFFFFF;
@@ -270,7 +270,7 @@ button.dropdown-toggle {
 .form-control:focus {
     background-color: #FFFFFF;
     color: black;
-}
+} */
 
 .mb-3 input[type="file"] {
     padding-right: 10px;
@@ -315,4 +315,8 @@ button.dropdown-toggle {
     100% {
         background-position: 0;
     }
+}
+
+label {
+    color: blue;
 }

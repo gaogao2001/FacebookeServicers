@@ -254,14 +254,21 @@ $(document).ready(function () {
                     $('#currentImages').empty().show();
                     existingImages = JSON.parse(content.imgs);
                     existingImages.forEach(function (imgUrl) {
-                        const imgName = imgUrl.substring(imgUrl.lastIndexOf('/') + 1);
+                        // Chuyển đổi đường dẫn tuyệt đối thành URL truy cập được bằng cách loại bỏ phần public path
+                        const publicPathPrefix = "/var/www/FacebookService/public/";
+                        let displayUrl = imgUrl;
+                        if(imgUrl.indexOf(publicPathPrefix) === 0){
+                            displayUrl = imgUrl.replace(publicPathPrefix, '/');
+                        }
+                        
+                        const imgName = displayUrl.substring(displayUrl.lastIndexOf('/') + 1);
                         const imgElement = $(`
                             <div class="existing-image">
-                                <img src="${imgUrl}" alt="Image">
+                                <img src="${displayUrl}" alt="Image">
                                 <button type="button" class="remove-existing-image">&times;</button>
                             </div>
                         `);
-
+                    
                         // Xử lý sự kiện xoá hình ảnh hiện có
                         imgElement.find('.remove-existing-image').click(function () {
                             const index = existingImages.indexOf(imgUrl);
@@ -270,7 +277,7 @@ $(document).ready(function () {
                             }
                             imgElement.remove();
                         });
-
+                    
                         $('#currentImages').append(imgElement);
                     });
                 } else {
@@ -436,18 +443,156 @@ $(document).ready(function () {
 
     loadContents();
 
-    $('#btnFileManager').click(function () {
-        $('#fileManagerModal').modal('show');
-    });
 
-    // Hàm callback sẽ được gọi khi FileManager chọn hình
-    // FileManager cần thực hiện postMessage hoặc gọi window.onFileSelected(url)
-    function onFileSelected(url) {
-        $('#fileManagerModal').modal('hide');
-        // Hiển thị hình được chọn
-        $('#currentImages').append('<img src="' + url + '" height="100" style="margin:5px;">');
-        // Nếu cần lưu giá trị để submit form, bạn có thể thêm input hidden chứa url đó
+    // Biến lưu cấu trúc ảnh trả về từ ajax
+    let contentImagesTree = {};
+    let currentContentImageFolder = null;
+    let contentImageFolderStack = [];
+    let fileManagerSelectedImages = []; // Các hình được chọn tạm từ modal
+    // existingImages là mảng chứa URL hình đã chọn (dùng gửi form và hiển thị preview)
+    
+    function loadContentImageList() {
+        const imageList = document.getElementById('contentImageList');
+        imageList.innerHTML = '';
+        const folderName = currentContentImageFolder ? currentContentImageFolder : 'root';
+        document.getElementById('currentContentImageFolder').innerText = folderName;
+        document.getElementById('backContentImageButton').style.display = currentContentImageFolder ? "inline-block" : "none";
+    
+        if (!currentContentImageFolder) { // Load folder
+            for (let folder in contentImagesTree) {
+                const colDiv = document.createElement('div');
+                colDiv.className = "col-md-3 mb-3";
+                const card = document.createElement('div');
+                card.className = "card";
+                card.style.cursor = "pointer";
+                card.onclick = function() {
+                    contentImageFolderStack.push(currentContentImageFolder);
+                    currentContentImageFolder = folder;
+                    loadContentImageList();
+                };
+                const cardBody = document.createElement('div');
+                cardBody.className = "card-body text-center";
+                cardBody.innerText = folder;
+                card.appendChild(cardBody);
+                colDiv.appendChild(card);
+                imageList.appendChild(colDiv);
+            }
+        } else { // Load hình trong folder
+            const images = contentImagesTree[currentContentImageFolder];
+            images.forEach(image => {
+                const colDiv = document.createElement('div');
+                colDiv.className = "col-md-3 mb-3";
+                const card = document.createElement('div');
+                card.className = "card";
+                card.style.cursor = "pointer";
+                // Ở đây dùng toggle để multi-select
+                card.onclick = function() {
+                    toggleContentImageSelection(image, card);
+                };
+                const imgElem = document.createElement('img');
+                imgElem.className = "card-img-top";
+                imgElem.src = image.url;
+                imgElem.alt = image.name;
+                const cardBody = document.createElement('div');
+                cardBody.className = "card-body text-center p-2";
+                cardBody.innerText = image.name;
+                card.appendChild(imgElem);
+                card.appendChild(cardBody);
+                colDiv.appendChild(card);
+                imageList.appendChild(colDiv);
+            });
+        }
     }
-    // Gắn callback ra global để FileManager có thể gọi
-    window.onFileSelected = onFileSelected;
+    
+    function goBackContentImage() {
+        if (contentImageFolderStack.length) {
+            currentContentImageFolder = contentImageFolderStack.pop();
+        } else {
+            currentContentImageFolder = null;
+        }
+        loadContentImageList();
+    }
+    
+    // Hàm hiển thị modal chọn ảnh từ FileManager
+    function showContentImageSelector() {
+        $.ajax({
+            url: '/file-manager/images',
+            type: 'GET',
+            dataType: 'json',
+            success: function(treeData) {
+                contentImagesTree = treeData;
+                currentContentImageFolder = null;
+                contentImageFolderStack = [];
+                fileManagerSelectedImages = []; // Reset mảng chọn tạm
+                loadContentImageList();
+                $('#contentImageSelectorModal').modal('show');
+            },
+            error: function(err) {
+                console.error(err);
+                showAlert('error', 'Lỗi tải hình ảnh từ FileManager');
+            }
+        });
+    }
+    
+    // Hàm toggle (chọn/hủy) hình từ FileManager
+    function toggleContentImageSelection(image, cardElement) {
+        if (!fileManagerSelectedImages.includes(image.url)) {
+            fileManagerSelectedImages.push(image.url);
+            cardElement.classList.add('selected');
+        } else {
+            const index = fileManagerSelectedImages.indexOf(image.url);
+            if (index > -1) {
+                fileManagerSelectedImages.splice(index, 1);
+            }
+            cardElement.classList.remove('selected');
+        }
+        console.log("Selected fileManager images:", fileManagerSelectedImages);
+    }
+    
+    // Sự kiện cho nút xác nhận chọn hình trong modal FileManager
+    $('#btnConfirmFileManagerSelection').on('click', function() {
+        fileManagerSelectedImages.forEach(function(url) {
+            if (!existingImages.includes(url)) {
+                existingImages.push(url);
+                const previewDiv = $(`
+                    <div class="preview-image">
+                        <img src="${url}" alt="Image">
+                        <button type="button" class="remove-image">&times;</button>
+                    </div>
+                `);
+                previewDiv.find('.remove-image').click(function () {
+                    const idx = existingImages.indexOf(url);
+                    if (idx > -1) {
+                        existingImages.splice(idx, 1);
+                    }
+                    previewDiv.remove();
+                });
+                $('#previewImages').append(previewDiv);
+            }
+        });
+        // Sau khi xác nhận, reset mảng chọn tạm và ẩn modal
+        fileManagerSelectedImages = [];
+        $('#contentImageSelectorModal').modal('hide');
+    });
+    
+    // Sự kiện cho các nút chọn nguồn hình ảnh (ở modal imageOptionModal)
+    $('#btnSelectFromFileManager').on('click', function() {
+        $('#imageOptionModal').modal('hide');
+        showContentImageSelector();
+    });
+    $('#btnUploadFromLocal').on('click', function() {
+        $('#imageOptionModal').modal('hide');
+        $('#contentImage').trigger('click');
+    });
+    $('#btnSelectImageOption').on('click', function() {
+        $('#imageOptionModal').modal('show');
+    });
+    window.goBackContentImage = function() {
+        if (contentImageFolderStack.length) {
+            currentContentImageFolder = contentImageFolderStack.pop();
+        } else {
+            currentContentImageFolder = null;
+        }
+        loadContentImageList();
+    }
 });

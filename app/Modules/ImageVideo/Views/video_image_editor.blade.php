@@ -25,6 +25,26 @@
     window.console = window.console || function(t) {};
 </script>
 
+<style>
+  /* Điều chỉnh chiều rộng của modal-dialog */
+  #previewModal .modal-dialog {
+    max-width: 60%; /* chiếm 90% chiều ngang viewport */
+  }
+  /* Điều chỉnh chiều cao của modal-content */
+  #previewModal .modal-content {
+    height: 90vh; /* chiếm 66% chiều cao viewport ~ 2/3 */
+  }
+  /* Cho video bên trong chiếm toàn bộ modal-body */
+  #previewModal .modal-body {
+    height: calc(66vh - 120px); /* trừ đi khoảng không gian modal-header và modal-footer, chỉnh theo kích thước thực */
+  }
+  #previewVideo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+</style>
+
 @endsection
 
 @section('content')
@@ -33,12 +53,12 @@
     <div class="row" id="topPart">
         <div class="col-3 border-end h-100">
             <video controls="" id="video">
-                <source src="https://getsamplefiles.com/download/mp4/sample-5.mp4" type="video/mp4">
+                <source src="" type="video/mp4">
             </video>
         </div>
         <div class="col-9" id="editor">
             <!-- Nav tabs -->
-            <ul class="nav nav-tabs" id="editorTabs" role="tablist">
+            <ul class="nav nav-tabs wrapper " id="editorTabs" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="basic-video-tab" data-bs-toggle="tab" data-bs-target="#basic-video-form" type="button" role="tab" aria-controls="basic-video-form" aria-selected="true">
                         Basic Video
@@ -46,7 +66,7 @@
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="concat-videos-tab" data-bs-toggle="tab" data-bs-target="#concat-videos-form" type="button" role="tab" aria-controls="concat-videos-form" aria-selected="false">
-                        Concat Videos
+                        Video + Video
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -59,20 +79,25 @@
                         Tách audio
                     </button>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="concat-segments-tab" data-bs-toggle="tab" data-bs-target="#concat-segments-form" type="button" role="tab" aria-controls="concat-segments-form" aria-selected="false">
+                        Concat Video Segments
+                    </button>
+                </li>
             </ul>
-
             <!-- Tab content -->
-            <div class="tab-content" id="editorTabContent">
+            <div class="tab-content wrapper " id="editorTabContent">
                 <!-- Basic Video Tab -->
                 <div class="tab-pane fade show active p-3" id="basic-video-form" role="tabpanel" aria-labelledby="basic-video-tab">
+                    <h6> <small>Video (Hình ảnh + Âm thanh)</small> </h6>
                     <form method="POST" enctype="multipart/form-data" id="createVideoForm">
                         @csrf
                         <div class="input-group mb-3" style="width: 300px;">
-                            <label for="images" class="input-group-text">Hình ảnh</label>
+                            <label for="images" class="input-group-text btn btn-primary">Hình ảnh</label>
                             <input type="file" name="images[]" id="images" class="form-control" multiple required>
                         </div>
                         <div class="input-group mb-3" style="width: 300px;">
-                            <label for="audio" class="input-group-text">Âm thanh</label>
+                            <label for="audio" class="input-group-text btn-primary">Âm thanh</label>
                             <input type="file" name="audio" id="audio" class="form-control" required>
                         </div>
                         <div class="input-group mb-3" style="width: 200px;">
@@ -84,6 +109,9 @@
                 </div>
                 <!-- Thêm vào phần Tab content, ví dụ bên dưới tab Basic Video -->
                 <div class="tab-pane fade p-3" id="concat-videos-form" role="tabpanel" aria-labelledby="concat-videos-tab">
+                    <h6> <small>Video (Video + Video + Âm thanh)</small> </h6>
+                    <p>Lưu ý : Khi chọn file ở máy có thể Chọn 2 Video để ghép 1 lần
+                    <p>
                     <form method="POST" enctype="multipart/form-data" id="concatVideosForm">
                         @csrf
                         <!-- Hàng 1: Chọn video và đặt tên file output -->
@@ -97,11 +125,10 @@
                             <div class="col-md-6">
                                 <div class="input-group">
                                     <label for="outputFile" class="input-group-text">Output File</label>
-                                    <input type="text" name="outputFile" id="outputFile" class="form-control" placeholder="output.mp4" required>
+                                    <input type="text" name="outputFile" id="outputFile" class="form-control" placeholder="ví dụ:(tai_hehe.mp4)" required onblur="if(this.value && !this.value.endsWith('.mp4')) { this.value += '.mp4'; }">
                                 </div>
                             </div>
                         </div>
-
                         <!-- Hàng 2: Checkbox giữ âm thanh gốc và chọn audio mới (nếu không giữ) -->
                         <div class="row mb-3 align-items-center">
                             <div class="col-md-4">
@@ -119,7 +146,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <!-- Hàng 3: Checkbox áp dụng chuyển cảnh và các tùy chọn liên quan -->
                         <!-- <div class="row mb-3 align-items-center">
                             <div class="col-md-4">
@@ -165,7 +191,6 @@
                                 </div>
                             </div>
                         </div> -->
-
                         <!-- Hàng 4: Nút submit (ghép video) -->
                         <div class="row">
                             <div class="col-md-12 text-end">
@@ -235,6 +260,7 @@
                     </form>
                 </div>
                 <div class="tab-pane fade p-3" id="extract-audio-form" role="tabpanel" aria-labelledby="extract-audio-tab">
+                    <h6> <small>Tách âm thanh từ video</small> </h6>
                     <form action="/extract-audio" method="POST" enctype="multipart/form-data" id="extractAudioForm">
                         @csrf
                         <div class="input-group mb-3" style="width: 300px;">
@@ -243,17 +269,70 @@
                         </div>
                         <div class="input-group mb-3" style="width: 300px;">
                             <label for="outputAudio" class="input-group-text">Tên</label>
-                            <input type="text" name="outputAudio" id="outputAudio" class="form-control" placeholder="output.mp3" required onblur="if(this.value && !this.value.endsWith('.mp3')) { this.value += '.mp3'; }">
+                            <input type="text" name="outputAudio" id="outputAudio" class="form-control" placeholder="ví dụ:(tai_hehe.mp4)" required onblur="if(this.value && !this.value.endsWith('.mp3')) { this.value += '.mp3'; }">
                         </div>
                         <button type="submit" class="btn btn-primary">Tách Audio</button>
+                    </form>
+                </div>
+                <!-- New Tab Pane for Concat Video Segments -->
+                <div class="tab-pane fade p-3" id="concat-segments-form" role="tabpanel" aria-labelledby="concat-segments-tab">
+                    <p>Lưu ý: Ở đây có thể ghép nhiều video lại với nhau; và có thể chọn thời gian bắt đầu và kết thúc để ghép</p>
+                    <form method="POST" enctype="multipart/form-data" id="concatVideoSegmentsForm" action="/concat-video-segments">
+                        @csrf
+                        <!-- Container for each video segment input row -->
+                        <div id="videoSegmentsContainer">
+                            <div class="row mb-2 video-segment-row">
+                                <div class="col-md-3">
+                                    <input type="file" name="videos[]" class="form-control" accept="video/*" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="text" name="segments[0][start]" class="form-control" placeholder="Start (giây)" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="text" name="segments[0][end]" class="form-control" placeholder="End (giây)" required>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Button to add another video segment row -->
+                        <button type="button" id="addVideoSegmentBtn" class="btn btn-secondary mb-3">
+                            <i class="bi bi-plus-circle-fill"></i> Thêm video
+                        </button>
+                        <!-- Output File Input -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="outputSegmentsFile" class="input-group-text">Tên</label>
+                                    <input type="text" name="outputFile" id="outputSegmentsFile" class="form-control" placeholder="ví dụ:(tai_hehe.mp4)" required onblur="if(this.value && !this.value.endsWith('.mp4')) { this.value += '.mp4'; }">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3" id="audioSegmentsDiv" style="display:none;">
+                                    <label for="audioSegments" class="input-group-text">Audio mới</label>
+                                    <input type="file" name="audio" id="audioSegments" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Checkbox: Giữ âm thanh gốc -->
+                        <div class="mb-3 form-check">
+                            <input class="form-check-input" type="checkbox" value="1" id="keepSegmentsAudio" name="keepVideoAudio" checked>
+                            <label class="form-check-label" for="keepSegmentsAudio">
+                                Giữ âm thanh gốc cho video?
+                            </label>
+                        </div>
+                        <!-- Submit Button -->
+                        <div class="row">
+                            <div class="col-md-12 text-end">
+                                <button type="submit" class="btn btn-primary">Ghép Video Segments</button>
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
-    <div class="row" id="bottomPart" style="height: 236px;padding-top: 150px">
+    <div class="row" id="bottomPart" style="display: none; height: 300px; padding-top: 100px;">
         <div class="col-12 border-top h-100" id="timeline-editor">
-            <div class="timeline ruler-wrapper" style="height: 235px;">
+            <div class="timeline ruler-wrapper" style="height: 280px; background-color: #f8f9fa;">
 
                 <div class="btn-add" onclick="addItem()">
                     <i class="bi bi-plus-circle-fill"></i>
@@ -342,6 +421,28 @@
     </div>
 </div>
 
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content wrapper">
+            <div class="modal-header">
+                <h5 class="modal-title">Xem demo video</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body wrapper">
+                <!-- Sử dụng thẻ video để hiển thị demo -->
+                <video controls="" id="previewVideo" style="width: 100%;">
+                    <source src="" type="video/mp4">
+                </video>
+            </div>
+            <div class="modal-footer">
+                <!-- Nút xuất file -->
+                <button type="button" id="exportFileBtn" class="btn btn-primary">Xuất file</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chỉnh sửa</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @section('footer.scripts')
@@ -349,4 +450,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
 <script src="{{ asset('modules/video_image/js/video_editor.js') }}"></script>
+
+<script>
+
+</script>
 @endsection

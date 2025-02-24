@@ -52,6 +52,16 @@
         width: 100%;
         height: 500px;
     }
+
+    .selected {
+        border: 3px solid #28a745;
+
+    }
+
+     .modal-body {
+        max-height: 500px;
+        overflow-y: auto;
+    }
 </style>
 
 @endsection
@@ -140,8 +150,10 @@
                             <input type="hidden" id="longitude" name="longitude" value="">
                             <div class="form-group">
                                 <label for="contentImage">Hình ảnh</label>
-                                <input type="file" class="form-control" id="contentImage" name="img[]" accept="image/*" multiple style="color: #FFFFFF;">
-                                <button type="button" class="btn btn-info mt-2" id="btnFileManager">Chọn hình từ FileManager</button>
+                                <!-- Ẩn input file dùng cho tải ảnh từ máy -->
+                                <input type="file" class="form-control" id="contentImage" name="img[]" accept="image/*" multiple style="display: none;">
+                                <!-- Button chính để chọn hình ảnh (mở modal option) -->
+                                <button type="button" class="btn btn-info mt-2" id="btnSelectImageOption">Chọn hình ảnh</button>
                                 <div id="previewImages"></div>
                                 <div id="currentImages"></div>
                             </div>
@@ -183,20 +195,51 @@
     </div>
 </div>
 
-<div class="modal fade" id="fileManagerModal" tabindex="-1" role="dialog" aria-labelledby="fileManagerModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content">
+<div class="modal fade" id="imageOptionModal" tabindex="-1" role="dialog" aria-labelledby="imageOptionModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content wrapper">
             <div class="modal-header">
-                <h5 class="modal-title">Chọn hình từ File Manager</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <h5 class="modal-title" id="imageOptionModalLabel">Chọn nguồn hình ảnh</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Đóng">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <button type="button" class="btn btn-primary" id="btnUploadFromLocal">Tải ảnh từ máy</button>
+                <button type="button" class="btn btn-secondary" id="btnSelectFromFileManager">Chọn ảnh từ FileManager</button>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal chọn hình ảnh từ FileManager (cho chọn nhiều hình) -->
+<div class="modal fade" id="contentImageSelectorModal" tabindex="-1" role="dialog" aria-labelledby="contentImageSelectorLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document" style="max-width:66.67%;">
+        <div class="modal-content wrapper">
+            <div class="modal-header">
+                <!-- Nút Back để quay lại danh sách folder -->
+                <button id="backContentImageButton" type="button" class="btn btn-secondary mr-2" style="display:none;" onclick="goBackContentImage()">Back</button>
+                <h5 class="modal-title" id="contentImageSelectorLabel">Chọn hình ảnh</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Đóng">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <iframe  frameborder="0" style="width: 100%; height: 500px;"></iframe>
+                <p>Thư mục: <span id="currentContentImageFolder">root</span></p>
+                <div id="contentImageList" class="row">
+                    <!-- Danh sách folder/hình sẽ được load tại đây -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" id="btnConfirmFileManagerSelection">Xác nhận chọn hình</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
             </div>
         </div>
     </div>
+</div>iv>
 </div>
 @endsection
 

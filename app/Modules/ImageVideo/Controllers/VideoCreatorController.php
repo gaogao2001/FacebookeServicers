@@ -14,12 +14,10 @@ if (!class_exists('HoangquyIT\InvalidArgumentException')) {
 class VideoCreatorController extends Controller
 {
 
-
     public function videoCreatorPage()
     {
         return view('VideoImage::video_image_editor');
     }
-
 
     public function createBasicVideo(Request $request)
     {
@@ -33,24 +31,21 @@ class VideoCreatorController extends Controller
         $audio = $request->file('audio');
         $totalDuration = $request->totalDuration;
 
-        // Tạo tên file video độc nhất
-        $outputFile = uniqid('video_', true) . '.mp4';
+        // Tạo tên file demo với tiền tố preview_
+        $outputFile = 'preview_' . uniqid('video_', true) . '.mp4';
 
-        // Đường dẫn thư mục output cần đảm bảo tồn tại và có quyền ghi
-        $outputFolder = '/var/www/html/ouput';
+        // Sử dụng thư mục preview (đảm bảo thư mục này có quyền ghi và cho phép truy cập web)
+        $outputFolder = '/var/www/FacebookService/public/output/Preview';
         $videoEditor = new VideoEditor($outputFolder);
 
-        // Xử lý tạo video
+        // Gọi hàm tạo video cơ bản – lưu file demo
         $success = $videoEditor->createBasicVideo($images, $outputFile, 30, 1280, 720, $totalDuration, $audio);
 
         if ($success) {
-            // Sau khi xử lý xong và video được tạo thành công, lưu tên file vào file /tmp/video_create.txt
-            file_put_contents("/tmp/video_create.txt", $outputFile);
-            // Hiển thị danh sách file hình ảnh đã lưu trong thư mục output
-
-            return response()->json(['message' => 'Tạo video thành công', 'outputFile' => $outputFile], 200);
+            $previewUrl = asset("output/Preview/" . $outputFile);
+            return response()->json(['message' => 'Tạo video demo thành công', 'previewUrl' => $previewUrl], 200);
         } else {
-            return response()->json(['message' => 'Tạo video thất bại'], 500);
+            return response()->json(['message' => 'Tạo video demo thất bại'], 500);
         }
     }
 
@@ -61,77 +56,126 @@ class VideoCreatorController extends Controller
             'videos.*' => 'required|file|mimetypes:video/mp4,video/avi,video/mpeg',
             'outputFile' => 'required|string',
             'audioConcat' => 'nullable|file|mimes:mp3,wav,ogg',
-            'transitionType' => 'required_if:applyTransition,1',
-            'transitionDuration' => 'required_if:applyTransition,1|numeric',
-            'transitionOffset' => 'required_if:applyTransition,1|numeric',
-            'targetWidth' => 'required_if:applyTransition,1|numeric',
-            'targetHeight' => 'required_if:applyTransition,1|numeric',
         ]);
 
-
         $videos = $request->file('videos');
-        $outputFile = $request->outputFile;
+        // Cũng tạo file demo với tiền tố preview_
+        $outputFile = 'preview_' . $request->outputFile;
         $audioPath = $request->file('audioConcat');
         $keepVideoAudio = $request->has('keepVideoAudio');
 
-
-        $applyTransition = $request->has('applyTransition');
-
-        if (!$request->has('applyTransition')) {
-            $transitionOptions = [];
-        } else {
-            $transitionOptions = [
-                'enable'              => true,
-                'transition_type'     => $request->input('transitionType'),
-                'transition_duration' => $request->input('transitionDuration'),
-                'transition_offset'   => $request->input('transitionOffset'),
-                'width'               => $request->input('targetWidth'),
-                'height'              => $request->input('targetHeight'),
-            ];
-        }
-
-        $outputFolder = '/var/www/html/ouput';
-
+        $outputFolder = '/var/www/FacebookService/public/output/Preview';
         $videoEditor = new VideoEditor($outputFolder);
 
-        //dd($videos, $outputFile, $keepVideoAudio, $audioPath, $transitionOptions);
         $success = $videoEditor->concatVideos(
             $videos,
             $outputFile,
             $keepVideoAudio,
             $audioPath,
-            $transitionOptions
+            []  // Giả sử không dùng chuyển cảnh ở đây
         );
-       
 
         if ($success) {
-            file_put_contents("/tmp/video_create.txt", $outputFile);
-            return response()->json(['message' => 'Ghép video thành công', 'outputFile' => $outputFile], 200);
+            $previewUrl = asset("output/Preview/" . $outputFile);
+            return response()->json(['message' => 'Tạo video demo thành công', 'previewUrl' => $previewUrl], 200);
         } else {
-            return response()->json(['message' => 'Ghép video thất bại'], 500);
+            return response()->json(['message' => 'Tạo video demo thất bại'], 500);
         }
     }
-
 
     public function extractAudio(Request $request)
     {
         $video = $request->file('video');
         $outputAudio = $request->outputAudio;
 
-       
 
-        $outputFolder = '/var/www/html/ouput';
+        $outputFolder = '/var/www/html/ouput/Audio';
 
         $audio = new VideoEditor($outputFolder);
 
         $success = $audio->extractAudio($video, $outputAudio);
-        
 
-        if($success){
+        if ($success) {
             return response()->json(['message' => 'Tách audio thành công', 'outputFile' => $outputAudio], 200);
         } else {
             return response()->json(['message' => 'Tách audio thất bại'], 500);
         }
-       
+    }
+
+    public function concatVideoSegmentsPreview(Request $request)
+    {
+        // validate input tương tự concatVideoSegments
+        $request->validate([
+            'videos.*'  => 'required|file|mimetypes:video/mp4,video/avi,video/mpeg',
+            'segments'  => 'required|array',
+            'segments.*.start' => 'required|numeric',
+            'segments.*.end'   => 'required|numeric',
+            'outputFile' => 'required|string',
+            'audio' => 'nullable|file|mimes:mp3,wav,ogg'
+        ]);
+
+        // Xử lý như concatVideoSegments
+        // Nhận file video, segments, và các thông tin khác
+        $videoFiles = $request->file('videos');
+        $segments = $request->input('segments');
+        $outputFile = $request->input('outputFile');
+        $keepVideoAudio = $request->has('keepVideoAudio');
+
+        $videosPaths = [];
+        foreach ($videoFiles as $file) {
+            $videosPaths[] = $file->getPathname();
+        }
+        $audioPath = null;
+        if (!$keepVideoAudio && $request->hasFile('audio')) {
+            $audioPath = $request->file('audio')->getPathname();
+        }
+
+        // Sử dụng thư mục tạm cho file demo
+        $outputFolder = '/var/www/FacebookService/public/output/Preview';
+        $videoEditor = new VideoEditor($outputFolder);
+
+        // Giả sử hàm concatVideoSegments tạo file và trả về bool.
+        // Bạn có thể lưu tên file preview (ví dụ: prefix 'preview_' + $outputFile)
+        $previewFile = 'preview_' . $outputFile;
+        $success = $videoEditor->concatVideoSegments($videosPaths, $segments, $previewFile, $keepVideoAudio, $audioPath);
+
+        if ($success) {
+            // Trả về URL của file preview (cần đảm bảo file được truy cập từ web)
+            $previewUrl = asset("output/Preview/" . $previewFile);
+            return response()->json([
+                'message' => 'Ghép video demo thành công',
+                'previewUrl' => $previewUrl
+            ], 200);
+        } else {
+            return response()->json([
+                'message' => 'Ghép video demo thất bại'
+            ], 500);
+        }
+    }
+
+    public function confirmExport(Request $request)
+    {
+        // Xác nhận xuất file cuối cùng
+        // Nhận thông tin cần thiết (có thể lưu lại thông tin preview trong session hoặc truyền lại từ form)
+        // Sau đó, chuyển đổi file preview thành file cuối cùng ở thư mục export (ví dụ: '/var/www/html/ouput/Video')
+        $outputFile = $request->input('outputFile');
+        $previewFile = 'preview_' . $outputFile;
+        $finalFile = $outputFile;
+        $previewFolder = '/var/www/FacebookService/public/output/Preview/';
+        $finalFolder = '/var/www/html/output/Video/';
+
+        if (file_exists($previewFolder . $previewFile)) {
+            // Di chuyển file demo sang thư mục final (hoặc copy)
+            if (rename($previewFolder . $previewFile, $finalFolder . $finalFile)) {
+                return response()->json([
+                    'message' => 'Xuất file thành công',
+                    'outputFile' => $finalFile,
+                    'fileUrl' => asset("output/Video/" . $finalFile)
+                ], 200);
+            }
+        }
+        return response()->json([
+            'message' => 'Xuất file thất bại'
+        ], 500);
     }
 }

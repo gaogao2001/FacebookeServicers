@@ -48,7 +48,7 @@ class FileManagerController extends Controller
 
     public function getFilesByGroup(Request $request)
     {
-        
+
         $group = $request->input('group');
         $storagePath = $request->input('storage_path');
 
@@ -155,7 +155,7 @@ class FileManagerController extends Controller
 
     public function updateFilePath(Request $request)
     {
-       
+
         // Validate đầu vào
         $request->validate([
             'selectedPath' => 'required|string',
@@ -211,5 +211,42 @@ class FileManagerController extends Controller
         }
 
         return response()->json(['success' => 'Thư mục đã được xóa thành công.']);
+    }
+
+    public function getAllImages(Request $request)
+    {
+        // Sử dụng thư mục public chứa hình ảnh làm base
+        $basePath = public_path('FileData/Images');
+
+     
+        $tree = [];
+
+        if (is_dir($basePath)) {
+            // Lấy tất cả các file trong thư mục base (đệ quy)
+            $files = File::allFiles($basePath);
+            foreach ($files as $file) {
+                $extension = strtolower($file->getExtension());
+                if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif'])) {
+                    // Lấy đường dẫn tương đối so với thư mục gốc
+                    $relativePath = str_replace($basePath, '', $file->getRealPath());
+                    // Nếu hình ảnh nằm trong thư mục con dạng chỉ chứa số (ví dụ: /1046151503/filename)
+                    if (preg_match("#^/([\d]+)/#", $relativePath, $matches)) {
+                        $folder = $matches[1];
+                        $imageInfo = [
+                            'name' => $file->getFilename(),
+                            'path' => $file->getRealPath(),
+                            'url'  => asset('FileData/Images' . $relativePath),
+                        ];
+                        // Gom nhóm theo thư mục
+                        $tree[$folder][] = $imageInfo;
+                    }
+                }
+            }
+        } else {
+            Log::error("Base path không hợp lệ: " . $basePath);
+        }
+
+       
+        return response()->json($tree);
     }
 }

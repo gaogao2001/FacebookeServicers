@@ -11,3 +11,5 @@ Route::get('/file-manager/get-directories', [FileManagerController::class, 'getD
 Route::post('/file-manager/create-folder', [FileManagerController::class, 'createFolder'])->name('fileManager.createFolder');
 Route::post('/file-manager/update-path', [FileManagerController::class, 'updateFilePath'])->name('fileManager.updatePath');
 Route::delete('/file-manager/delete-folder', [FileManagerController::class, 'deleteFolder'])->name('fileManager.deleteFolder');
+
+Route::get('/file-manager/images', [FileManagerController::class, 'getAllImages'])->name('fileManager.getImages');

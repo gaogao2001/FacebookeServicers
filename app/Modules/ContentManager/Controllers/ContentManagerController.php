@@ -59,7 +59,7 @@ class ContentManagerController extends Controller
                 'content' => 'required|string',
                 'post_platform'  => 'required|string',
                 'img' => 'nullable',
-                'img.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                'img.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:5120',
                 'price' => 'nullable|numeric',
                 'latitude' => 'nullable|numeric',
                 'longitude' => 'nullable|numeric',
@@ -80,20 +80,32 @@ class ContentManagerController extends Controller
             'longitude' => $validatedData['longitude'] ?? null,
         ];
 
+        $imgs = [];
+
+        // Xử lý hình ảnh từ input file (tải từ máy)
         if ($request->hasFile('img')) {
             foreach ($request->file('img') as $image) {
-                // Lấy phần mở rộng và tạo tên file duy nhất
                 $extension = strtolower($image->getClientOriginalExtension());
                 $fileName  = time() . '_' . uniqid() . '.' . $extension;
-                // Lưu file vào disk public trong thư mục ContentImage
                 $path = $image->storeAs('ContentImage', $fileName, 'public');
-                // Lưu đường dẫn theo dạng relative (không có asset ở đây)
-                $data['imgs'][] = '/storage/ContentImage/' . $fileName;
+                $imgs[] = '/storage/ContentImage/' . $fileName;
+            }
+        }
+        if ($request->filled('existing_imgs')) {
+            $existingImgs = json_decode($request->input('existing_imgs'), true);
+            if (is_array($existingImgs)) {
+                // Chuyển đổi đường dẫn nếu hình được lưu từ File Manager (cũ) sang đường dẫn chuẩn
+                foreach ($existingImgs as &$img) {
+                    $img = str_replace('http://192.168.1.6/FileData/Images/', '/var/www/FacebookService/public/FileData/Images/', $img);
+                }
+                // Hợp nhất các hình đã upload và hình chọn từ FileManager
+                $imgs = array_merge($imgs, $existingImgs);
             }
         }
 
-        // Lưu mảng hình ảnh dưới dạng JSON
-        $data['imgs'] = json_encode($data['imgs']);
+        $data['imgs'] = json_encode($imgs);
+
+        // Debug dữ liệu (Sau khi kiểm tra, hãy xóa dd())
 
         $this->contentManagerRepository->create($data);
 
@@ -121,40 +133,40 @@ class ContentManagerController extends Controller
             return response()->json(['message' => 'Nội dung không tồn tại.'], 200);
         }
 
-        // Decode existing_imgs nếu là chuỗi JSON
+        // Giải mã existing_imgs nếu là chuỗi JSON, mặc định rỗng
         $existingImgsInput = $request->input('existing_imgs', '[]');
         $existingImgs = is_string($existingImgsInput) ? json_decode($existingImgsInput, true) : $existingImgsInput;
 
-        // Thêm existing_imgs vào request để validation nhận dạng đúng kiểu dữ liệu
+        // Gộp trường existing_imgs vào request để validate đúng kiểu mảng
         $request->merge(['existing_imgs' => $existingImgs]);
 
         try {
             $validatedData = $request->validate([
-                'title' => 'required|string|max:255',
-                'content' => 'required|string',
-                'post_platform'  => 'required|string',
-                'img' => 'nullable|array',
-                'img.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-                'existing_imgs' => 'nullable|array',
-                'price' => 'nullable|numeric',
-                'latitude' => 'nullable|numeric',
-                'longitude' => 'nullable|numeric',
+                'title'           => 'required|string|max:255',
+                'content'         => 'required|string',
+                'post_platform'   => 'required|string',
+                'img'             => 'nullable|array',
+                'img.*'           => 'image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+                'existing_imgs'   => 'nullable|array',
+                'price'           => 'nullable|numeric',
+                'latitude'        => 'nullable|numeric',
+                'longitude'       => 'nullable|numeric',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::error('Validation failed:', $e->errors());
             return response()->json(['errors' => $e->errors()], 200);
         }
 
-        // Kiểm tra và giải mã trường imgs từ database nếu cần
+        // Lấy danh sách hình ảnh đang lưu trong database (nếu có)
         if (isset($content->imgs)) {
-            $currentImgs = is_string($content->imgs) 
-                ? (json_decode($content->imgs, true) ?: []) 
+            $currentImgs = is_string($content->imgs)
+                ? (json_decode($content->imgs, true) ?: [])
                 : (is_array($content->imgs) ? $content->imgs : []);
         } else {
             $currentImgs = [];
         }
 
-        // Xác định các hình ảnh cần xóa (nếu có)
+        // Xác định các hình ảnh cần xóa (nếu có) - những hình đã lưu nhưng không có trong danh sách mới
         $imagesToDelete = array_diff($currentImgs, $existingImgs);
         foreach ($imagesToDelete as $oldImage) {
             $oldImagePath = str_replace('/storage/', '', $oldImage);
@@ -163,7 +175,7 @@ class ContentManagerController extends Controller
             }
         }
 
-        // Xử lý hình ảnh mới được tải lên
+        // Xử lý các file hình ảnh tải lên từ input (tải từ máy)
         if ($request->hasFile('img')) {
             foreach ($request->file('img') as $image) {
                 $extension = strtolower($image->getClientOriginalExtension());
@@ -173,24 +185,24 @@ class ContentManagerController extends Controller
             }
         }
 
-        // Chuẩn bị dữ liệu để cập nhật
+        // Chuẩn bị dữ liệu cập nhật
         $data = [
-            'title' => $validatedData['title'],
-            'content' => $validatedData['content'],
+            'title'         => $validatedData['title'],
+            'content'       => $validatedData['content'],
             'post_platform' => $validatedData['post_platform'],
-            'update_time' => now()->format('d/m/Y H:i:s'),
-            'imgs' => json_encode($existingImgs), // Mã hóa imgs thành chuỗi JSON
-            'price' => $validatedData['price'] ?? 0,
-            'latitude' => $validatedData['latitude'] ?? null,
-            'longitude' => $validatedData['longitude'] ?? null,
+            'update_time'   => now()->format('d/m/Y H:i:s'),
+            'imgs'          => json_encode($existingImgs), // Lưu dưới dạng JSON
+            'price'         => $validatedData['price'] ?? 0,
+            'latitude'      => $validatedData['latitude'] ?? null,
+            'longitude'     => $validatedData['longitude'] ?? null,
         ];
 
-
-        // Cập nhật vào database thông qua repository
+        // Cập nhật dữ liệu thông qua repository
         $this->contentManagerRepository->update($id, $data);
 
         return response()->json(['message' => 'Cập nhật nội dung thành công.']);
     }
+
 
 
 
