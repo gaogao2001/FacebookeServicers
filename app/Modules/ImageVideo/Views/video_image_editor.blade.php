@@ -21,29 +21,15 @@
 
 <link rel="stylesheet" href="{{ asset('modules/video_image/css/video_editor.css') }}">
 
+<link rel="stylesheet" href="{{ asset('assets/admin/css/pagination.css') }}">
+<script src="{{ asset('assets/admin/js/pagination.js') }}" defer></script>
+
+
 <script>
     window.console = window.console || function(t) {};
 </script>
 
-<style>
-  /* Điều chỉnh chiều rộng của modal-dialog */
-  #previewModal .modal-dialog {
-    max-width: 60%; /* chiếm 90% chiều ngang viewport */
-  }
-  /* Điều chỉnh chiều cao của modal-content */
-  #previewModal .modal-content {
-    height: 90vh; /* chiếm 66% chiều cao viewport ~ 2/3 */
-  }
-  /* Cho video bên trong chiếm toàn bộ modal-body */
-  #previewModal .modal-body {
-    height: calc(66vh - 120px); /* trừ đi khoảng không gian modal-header và modal-footer, chỉnh theo kích thước thực */
-  }
-  #previewVideo {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-</style>
+
 
 @endsection
 
@@ -89,115 +75,126 @@
             <div class="tab-content wrapper " id="editorTabContent">
                 <!-- Basic Video Tab -->
                 <div class="tab-pane fade show active p-3" id="basic-video-form" role="tabpanel" aria-labelledby="basic-video-tab">
-                    <h6> <small>Video (Hình ảnh + Âm thanh)</small> </h6>
-                    <form method="POST" enctype="multipart/form-data" id="createVideoForm">
-                        @csrf
-                        <div class="input-group mb-3" style="width: 300px;">
-                            <label for="images" class="input-group-text btn btn-primary">Hình ảnh</label>
-                            <input type="file" name="images[]" id="images" class="form-control" multiple required>
+                    <div class="row">
+                        <div class="row align-items-center">
+                            <div class="col-md-4">
+                                <h6><small>Video (Hình ảnh + Âm thanh)</small></h6>
+                                <form method="POST" enctype="multipart/form-data" id="createVideoForm" class="row g-3">
+                                    @csrf
+                                    <div class="input-group mb-3">
+                                        <!-- Ẩn input file dùng cho tải ảnh từ máy -->
+                                        <input type="file" name="images[]" id="images" class="form-control" multiple required style="display: none;">
+                                        <!-- Button để mở modal chọn nguồn hình ảnh -->
+                                        <button type="button" class="btn btn-primary" id="btnSelectImages">Chọn hình ảnh</button>
+                                    </div>
+                                    <div class="input-group mb-3">
+                                        <label for="audio" class="input-group-text btn btn-primary">Âm thanh</label>
+                                        <input type="file" name="audio" id="audio" class="form-control" required>
+                                    </div>
+                                    <div class="input-group mb-3">
+                                        <label for="totalDuration" class="input-group-text">Thời lượng</label>
+                                        <input type="text" class="form-control" id="totalDuration" name="totalDuration" placeholder="Duration" title="Thời lượng" onchange="updateDuration()">
+                                    </div>
+                                    <div class="form-group mt-3">
+                                        <label class="form-label" style="color: black;">Chế độ hiển thị hình ảnh:</label>
+                                        <div class="d-flex align-items-center mt-2">
+                                            <div class="form-check me-4">
+                                                <input class="form-check-input" type="radio" name="displayMode" id="distributedMode" value="distributed" checked>
+                                                <label style="color: white;" class="form-check-label" for="distributedMode">
+                                                    Chia đều thời lượng cho mỗi hình
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="displayMode" id="loopMode" value="loop">
+                                                <label style="color: white;" class="form-check-label" for="loopMode">
+                                                    Vòng lặp (mỗi hình 5 giây)
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <button type="button" class="btn btn-primary" id="createVideoBtn">Tạo Video</button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="col-md-1 d-flex justify-content-center">
+                                <div class="vr" style="height: 287px;"></div>
+                            </div>
+                            <div class="col-md-7">
+                                <h1>Hình ảnh</h1>
+                                <!-- Container hiển thị preview hình ảnh theo hàng ngang -->
+                                <div id="selectedVideosContainer" class="d-flex flex-wrap gap-2">
+                                    <!-- Các preview sẽ xuất hiện tại đây -->
+                                </div>
+                                <div id="pagination" class="pagination"></div>
+                            </div>
                         </div>
-                        <div class="input-group mb-3" style="width: 300px;">
-                            <label for="audio" class="input-group-text btn-primary">Âm thanh</label>
-                            <input type="file" name="audio" id="audio" class="form-control" required>
-                        </div>
-                        <div class="input-group mb-3" style="width: 200px;">
-                            <label for="totalDuration" class="input-group-text">Thời lượng</label>
-                            <input type="text" class="form-control" id="totalDuration" name="totalDuration" placeholder="Duration" title="Thời lượng" onchange="updateDuration()">
-                        </div>
-                        <button type="button" class="btn btn-primary" id="createVideoBtn">Tạo Video</button>
-                    </form>
+                    </div>
                 </div>
                 <!-- Thêm vào phần Tab content, ví dụ bên dưới tab Basic Video -->
                 <div class="tab-pane fade p-3" id="concat-videos-form" role="tabpanel" aria-labelledby="concat-videos-tab">
-                    <h6> <small>Video (Video + Video + Âm thanh)</small> </h6>
-                    <p>Lưu ý : Khi chọn file ở máy có thể Chọn 2 Video để ghép 1 lần
-                    <p>
-                    <form method="POST" enctype="multipart/form-data" id="concatVideosForm">
-                        @csrf
-                        <!-- Hàng 1: Chọn video và đặt tên file output -->
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="input-group">
-                                    <label for="videos" class="input-group-text">Videos</label>
-                                    <input type="file" name="videos[]" id="videos" class="form-control" multiple required>
+                    <div class="row align-items-center">
+                        <div class="col-md-4">
+                            <h6><small>Video (Video + Video + Âm thanh)</small></h6>
+                            <p>Lưu ý: Khi chọn file ở máy có thể Chọn 2 Video để ghép 1 lần</p>
+
+                            <form method="POST" enctype="multipart/form-data" id="concatVideosForm" class="row g-3">
+                                @csrf
+                                <!-- Hàng 1: Chọn video và đặt tên file output -->
+                                <div class="row mb-3">
+
+                                    <div class="input-group mt-3">
+                                        <label for="videos" class="input-group-text">Videos</label>
+                                        <input type="file" name="videos[]" id="videos" class="form-control" multiple required>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="input-group">
-                                    <label for="outputFile" class="input-group-text">Output File</label>
-                                    <input type="text" name="outputFile" id="outputFile" class="form-control" placeholder="ví dụ:(tai_hehe.mp4)" required onblur="if(this.value && !this.value.endsWith('.mp4')) { this.value += '.mp4'; }">
+                                <div class="row mb-3">
+                                    <div class="input-group mt-3">
+                                        <label for="outputFile" class="input-group-text">Output File</label>
+                                        <input type="text" name="outputFile" id="outputFile" class="form-control" placeholder="ví dụ:(tai_hehe.mp4)" required onblur="if(this.value && !this.value.endsWith('.mp4')) { this.value += '.mp4'; }">
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                        <!-- Hàng 2: Checkbox giữ âm thanh gốc và chọn audio mới (nếu không giữ) -->
-                        <div class="row mb-3 align-items-center">
-                            <div class="col-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="1" id="keepVideoAudio" name="keepVideoAudio" checked>
-                                    <label class="form-check-label" for="keepVideoAudio">
-                                        Giữ âm thanh gốc của video?
-                                    </label>
+                                <div class="row mb-3 align-items-center">
+                                    <div class="col-md-12">
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input" type="checkbox" value="1" id="keepVideoAudio" name="keepVideoAudio" checked>
+                                            <label class="form-check-label" for="keepVideoAudio">
+                                                Giữ âm thanh gốc của video?
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-8" id="audioConcatDiv" style="display:none;">
-                                <div class="input-group">
-                                    <label for="audioConcat" class="input-group-text">Audio mới</label>
-                                    <input type="file" name="audioConcat" id="audioConcat" class="form-control">
+
+                                <div class="row mb-3" id="audioConcatDiv" style="display:none;">
+                                    <div class="col-md-12">
+                                        <div class="input-group mt-3">
+                                            <label for="audioConcat" class="input-group-text">Audio mới</label>
+                                            <input type="file" name="audioConcat" id="audioConcat" class="form-control">
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                        <!-- Hàng 3: Checkbox áp dụng chuyển cảnh và các tùy chọn liên quan -->
-                        <!-- <div class="row mb-3 align-items-center">
-                            <div class="col-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="1" id="applyTransition" name="applyTransition">
-                                    <label class="form-check-label" for="applyTransition">
-                                        Áp dụng chuyển cảnh (chỉ cho 2 video)
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="col-md-8" id="transitionOptions" style="display: none;">
+
                                 <div class="row">
-                                    <div class="col-md-4 mb-2">
-                                        <div class="input-group">
-                                            <label for="transitionType" class="input-group-text">Loại</label>
-                                            <input type="text" name="transitionType" id="transitionType" class="form-control" placeholder="fade" value="fade">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 mb-2">
-                                        <div class="input-group">
-                                            <label for="transitionDuration" class="input-group-text">Thời lượng</label>
-                                            <input type="text" name="transitionDuration" id="transitionDuration" class="form-control" placeholder="1" value="1">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 mb-2">
-                                        <div class="input-group">
-                                            <label for="transitionOffset" class="input-group-text">Offset</label>
-                                            <input type="text" name="transitionOffset" id="transitionOffset" class="form-control" placeholder="4" value="4">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-2">
-                                        <div class="input-group">
-                                            <label for="targetWidth" class="input-group-text">Chiều rộng</label>
-                                            <input type="text" name="targetWidth" id="targetWidth" class="form-control" placeholder="1280" value="1280">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-2">
-                                        <div class="input-group">
-                                            <label for="targetHeight" class="input-group-text">Chiều cao</label>
-                                            <input type="text" name="targetHeight" id="targetHeight" class="form-control" placeholder="720" value="720">
-                                        </div>
+                                    <div class="col-md-12 text-end">
+                                        <button type="button" class="btn btn-primary" id="concatVideosBtn">Ghép Video</button>
                                     </div>
                                 </div>
-                            </div>
-                        </div> -->
-                        <!-- Hàng 4: Nút submit (ghép video) -->
-                        <div class="row">
-                            <div class="col-md-12 text-end">
-                                <button type="button" class="btn btn-primary" id="concatVideosBtn">Ghép Video</button>
-                            </div>
+                            </form>
                         </div>
-                    </form>
+
+                        <div class="col-md-1 d-flex justify-content-center">
+                            <div class="vr" style="height: 287px;"></div>
+                        </div>
+
+                        <div class="col-md-7">
+                            <h1>Video</h1>
+                            <!-- Container hiển thị preview hình ảnh theo hàng ngang -->
+                            <div id="selectedVideosContainer2" class="d-flex flex-wrap gap-2">
+                                <!-- Các preview sẽ xuất hiện tại đây -->
+                            </div>
+                            <div id="pagination2" class="pagination"></div>
+                        </div>
+                    </div>
                 </div>
                 <!-- Overlay Tab -->
                 <div class="tab-pane fade p-3" id="overlay-form" role="tabpanel" aria-labelledby="overlay-tab">
@@ -443,6 +440,77 @@
     </div>
 </div>
 
+<div class="modal fade" id="imageOptionModal" tabindex="-1" role="dialog" aria-labelledby="imageOptionModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content wrapper">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageOptionModalLabel">Chọn nguồn hình ảnh</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Đóng">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <button type="button" class="btn btn-primary" id="btnUploadFromLocal">Tải ảnh từ máy</button>
+                <button type="button" class="btn btn-secondary" id="btnSelectFromFileManager">Chọn ảnh từ FileManager</button>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal FileManager (cho chọn nhiều hình và video) -->
+<div class="modal fade" id="contentImageSelectorModal" tabindex="-1" role="dialog" aria-labelledby="contentImageSelectorLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document" style="max-width:70.67%;">
+        <div class="modal-content wrapper">
+            <div class="modal-header">
+                <!-- Nút Back để quay lại folder (nếu có) -->
+                <button id="backContentImageButton" type="button" class="btn btn-secondary mr-2" style="display:none;" onclick="goBackContentMedia()">Back</button>
+                <h5 class="modal-title" id="contentImageSelectorLabel">Chọn hình ảnh / video</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Đóng">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Tab cho Images và Videos -->
+                <ul class="nav nav-tabs mb-3" id="mediaTypeTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="images-tab" data-bs-toggle="tab" data-bs-target="#images-content"
+                            type="button" role="tab" aria-controls="images-content" aria-selected="true">Hình ảnh</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="videos-tab" data-bs-toggle="tab" data-bs-target="#videos-content"
+                            type="button" role="tab" aria-controls="videos-content" aria-selected="false">Video</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="mediaTypeTabsContent">
+                    <!-- Tab Images -->
+                    <div class="tab-pane fade show active" id="images-content" role="tabpanel" aria-labelledby="images-tab">
+                        <p>Thư mục: <span id="currentContentImageFolder">root</span></p>
+                        <div id="contentImageList" class="row">
+                            <!-- Danh sách folder/hình sẽ được load tại đây -->
+                        </div>
+                    </div>
+
+                    <!-- Tab Videos -->
+                    <div class="tab-pane fade" id="videos-content" role="tabpanel" aria-labelledby="videos-tab">
+                        <p>Thư mục: <span id="currentContentVideoFolder">root</span></p>
+                        <div id="contentVideoList" class="row">
+                            <!-- Danh sách folder/video sẽ được load tại đây -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" id="btnConfirmFileManagerSelection">Xác nhận chọn</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('footer.scripts')
@@ -451,7 +519,5 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
 <script src="{{ asset('modules/video_image/js/video_editor.js') }}"></script>
 
-<script>
 
-</script>
 @endsection

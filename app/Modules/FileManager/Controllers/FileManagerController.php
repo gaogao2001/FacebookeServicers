@@ -218,7 +218,6 @@ class FileManagerController extends Controller
         // Sử dụng thư mục public chứa hình ảnh làm base
         $basePath = public_path('FileData/Images');
 
-     
         $tree = [];
 
         if (is_dir($basePath)) {
@@ -246,7 +245,44 @@ class FileManagerController extends Controller
             Log::error("Base path không hợp lệ: " . $basePath);
         }
 
-       
+
+        return response()->json($tree);
+    }
+
+    public function getAllVideos(Request $request)
+    {
+        // Sử dụng thư mục public chứa video làm base
+        $basePath = public_path('FileData/Video');
+
+        $tree = [];
+
+        if (is_dir($basePath)) {
+            // Lấy tất cả các file trong thư mục base (đệ quy)
+            $files = File::allFiles($basePath);
+            foreach ($files as $file) {
+                $extension = strtolower($file->getExtension());
+                if (in_array($extension, ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm'])) {
+                    // Lấy đường dẫn tương đối so với thư mục gốc
+                    $relativePath = str_replace($basePath, '', $file->getRealPath());
+                    // Nếu video nằm trong thư mục con dạng chỉ chứa số (ví dụ: /1046151503/filename)
+                    if (preg_match("#^/([\d]+)/#", $relativePath, $matches)) {
+                        $folder = $matches[1];
+                        $videoInfo = [
+                            'name' => $file->getFilename(),
+                            'path' => $file->getRealPath(),
+                            'url'  => asset('FileData/Video' . $relativePath),
+                        ];
+                        // Gom nhóm theo thư mục
+                        $tree[$folder][] = $videoInfo;
+                    }
+                }
+            }
+        } else {
+            Log::error("Base path không hợp lệ: " . $basePath);
+        }
+
+   
+
         return response()->json($tree);
     }
 }

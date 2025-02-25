@@ -58,7 +58,7 @@
 
     }
 
-     .modal-body {
+    .modal-body {
         max-height: 500px;
         overflow-y: auto;
     }
@@ -239,8 +239,8 @@
             </div>
         </div>
     </div>
-</div>iv>
 </div>
+
 @endsection
 
 @section('foot.scripts')

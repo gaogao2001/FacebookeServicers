@@ -13,3 +13,4 @@ Route::post('/file-manager/update-path', [FileManagerController::class, 'updateF
 Route::delete('/file-manager/delete-folder', [FileManagerController::class, 'deleteFolder'])->name('fileManager.deleteFolder');
 
 Route::get('/file-manager/images', [FileManagerController::class, 'getAllImages'])->name('fileManager.getImages');
+Route::get('/file-manager/videos', [FileManagerController::class, 'getAllVideos'])->name('fileManager.getVideos');

@@ -22,24 +22,106 @@ class VideoCreatorController extends Controller
     public function createBasicVideo(Request $request)
     {
         $request->validate([
-            'images.*' => 'image',
             'audio'  => 'required|file|mimes:mp3,wav,ogg',
-            'totalDuration' => 'required|numeric'
+            'totalDuration' => 'required|numeric',
+            'displayMode' => 'required|in:distributed,loop' // Thêm validation cho displayMode
         ]);
 
-        $images = $request->file('images');
+
+        // Mảng cuối cùng chứa tất cả hình ảnh theo đúng thứ tự
+        $finalImages = [];
+
+        // Lấy thứ tự hình ảnh đã được truyền từ client
+        $imageOrder = $request->input('image_order');
+        $orderArray = [];
+        if ($imageOrder) {
+            $orderArray = json_decode($imageOrder, true) ?: [];
+        }
+
+        // Lấy danh sách file upload từ máy
+        $uploadedImages = $request->file('images');
+        if (!is_array($uploadedImages)) {
+            $uploadedImages = [];
+        }
+
+        // Chuẩn bị mảng đường dẫn tạm cho hình upload
+        $uploadedPaths = [];
+        foreach ($uploadedImages as $img) {
+            $uploadedPaths[] = $img->getRealPath();
+        }
+
+        // Lấy hình từ FileManager dưới dạng JSON
+        $existingImagesInput = $request->input('existing_images');
+        $existingPaths = [];
+        if ($existingImagesInput) {
+            $existingPaths = json_decode($existingImagesInput, true) ?: [];
+        }
+
+        // Chỉ số hiện tại cho mỗi loại ảnh
+        $localIndex = 0;
+        $fileManagerIndex = 0;
+
+        // Xử lý theo thứ tự từ mảng order
+        foreach ($orderArray as $type) {
+            if ($type === 'local' && $localIndex < count($uploadedPaths)) {
+                $finalImages[] = $uploadedPaths[$localIndex];
+                $localIndex++;
+            } elseif ($type === 'filemanager' && $fileManagerIndex < count($existingPaths)) {
+                $finalImages[] = $existingPaths[$fileManagerIndex];
+                $fileManagerIndex++;
+            }
+        }
+
+        // Kiểm tra nếu finalImages rỗng
+        if (empty($finalImages)) {
+            return response()->json(['message' => 'Danh sách hình ảnh không được để trống.'], 422);
+        }
+
+        // Chuyển đổi các URL thành file local tạm thời
+        $localImages = [];
+        $downloadedImages = []; // Để cleanup sau
+
+        foreach ($finalImages as $img) {
+            if (filter_var($img, FILTER_VALIDATE_URL)) {
+                // Xử lý URL
+                $contents = @file_get_contents($img);
+                if ($contents === false) {
+                    continue;
+                }
+                $tempImage = tempnam(sys_get_temp_dir(), 'img_') . '.jpg';
+                file_put_contents($tempImage, $contents);
+                $localImages[] = $tempImage;
+                $downloadedImages[] = $tempImage;
+            } else {
+                // Đã là file local
+                $localImages[] = $img;
+            }
+        }
+
+        // Phần còn lại của hàm giữ nguyên
+        if (empty($localImages)) {
+            return response()->json(['message' => 'Không thể tải được hình ảnh.'], 422);
+        }
+
+        // Audio upload
         $audio = $request->file('audio');
+        $audioPath = $audio->getRealPath();
         $totalDuration = $request->totalDuration;
+        $displayMode = $request->input('displayMode', 'distributed'); 
 
-        // Tạo tên file demo với tiền tố preview_
         $outputFile = 'preview_' . uniqid('video_', true) . '.mp4';
-
-        // Sử dụng thư mục preview (đảm bảo thư mục này có quyền ghi và cho phép truy cập web)
         $outputFolder = '/var/www/FacebookService/public/output/Preview';
         $videoEditor = new VideoEditor($outputFolder);
 
-        // Gọi hàm tạo video cơ bản – lưu file demo
-        $success = $videoEditor->createBasicVideo($images, $outputFile, 30, 1280, 720, $totalDuration, $audio);
+        // Gọi hàm tạo video với mảng đường dẫn đã được sắp xếp đúng thứ tự
+        $success = $videoEditor->createBasicVideo($localImages, $outputFile, 30, 1280, 720, $totalDuration, $audioPath ,  $displayMode);
+
+        // Cleanup các file ảnh tạm
+        foreach ($downloadedImages as $tempFile) {
+            if (file_exists($tempFile)) {
+                @unlink($tempFile);
+            }
+        }
 
         if ($success) {
             $previewUrl = asset("output/Preview/" . $outputFile);
@@ -159,7 +241,7 @@ class VideoCreatorController extends Controller
         // Nhận thông tin cần thiết (có thể lưu lại thông tin preview trong session hoặc truyền lại từ form)
         // Sau đó, chuyển đổi file preview thành file cuối cùng ở thư mục export (ví dụ: '/var/www/html/ouput/Video')
         $outputFile = $request->input('outputFile');
-        $previewFile = 'preview_' . $outputFile;
+        $previewFile =  $outputFile;
         $finalFile = $outputFile;
         $previewFolder = '/var/www/FacebookService/public/output/Preview/';
         $finalFolder = '/var/www/html/output/Video/';
