@@ -31,3 +31,4 @@ Route::post('/extract-audio', [VideoCreatorController::class, 'extractAudio']);
 
 Route::post('/concat-video-segments-preview', [VideoCreatorController::class, 'concatVideoSegmentsPreview']);
 Route::post('/confirm-export', [VideoCreatorController::class, 'confirmExport']);
+Route::post('/cut-video-preview',  [VideoCreatorController::class, 'cutVideoPreview']);

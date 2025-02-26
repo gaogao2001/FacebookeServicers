@@ -7,6 +7,8 @@ $(document).ready(function () {
     let currentPage = 1;
     const pageSize = 9;
 
+    let videoSegmentIndex = 1;
+
     // Biến tạm và biến cho modal FileManager
     let fileManagerSelectedImages = [];
     let fileManagerSelectedVideos = [];
@@ -17,12 +19,23 @@ $(document).ready(function () {
     let contentImageFolderStack = [];
     let contentVideoFolderStack = [];
 
+    let concatSelectedVideos = [];    // Local file objects cho concat
+    let concatExistingVideos = [];    // URLs từ FileManager cho concat
+    let concatSelectedOrder = [];      // Mảng lưu thứ tự chọn video cho concat
+    let concatCurrentPage = 1;
+
+    let extractAudioVideoRow = null;
+
 
     $('#addVideoSegmentBtn').on('click', function () {
         const rowHtml = `
             <div class="row mb-2 video-segment-row">
                 <div class="col-md-3">
-                    <input type="file" name="videos[]" class="form-control" accept="video/*" required>
+                    <button type="button" class="btn btn-primary select-video-btn w-100">
+                        <i class="bi bi-file-earmark-play"></i> Chọn Video
+                    </button>
+                    <input type="file" name="videos[]" class="form-control d-none segment-video-input" accept="video/*">
+                    <div class="selected-video-name mt-1 small text-truncate"></div>
                 </div>
                 <div class="col-md-3">
                     <input type="text" name="segments[${videoSegmentIndex}][start]" class="form-control" placeholder="Start (giây)" required>
@@ -33,15 +46,41 @@ $(document).ready(function () {
                 <div class="col-md-2 text-end">
                     <button type="button" class="btn btn-danger btn-sm removeSegmentBtn">Xóa</button>
                 </div>
+                <input type="hidden" name="segment_video_urls[]" class="segment-video-url">
+                <input type="hidden" name="segment_video_types[]" class="segment-video-type" value="local">
             </div>
         `;
         $('#videoSegmentsContainer').append(rowHtml);
         videoSegmentIndex++;
     });
 
+    let currentSegmentRow = null;
+
     // Sử dụng event delegation để xóa row khi click vào nút removeSegmentBtn
     $(document).on('click', '.removeSegmentBtn', function () {
         $(this).closest('.video-segment-row').remove();
+    });
+
+    $(document).on('click', '.select-video-btn', function () {
+        // Lưu trữ tham chiếu đến hàng hiện tại để sử dụng sau
+        currentSegmentRow = $(this).closest('.video-segment-row');
+        $('#videoOptionModal').modal('show');
+    });
+
+    $(document).on('change', '.segment-video-input', function () {
+        const file = this.files[0];
+        const row = $(this).closest('.video-segment-row');
+
+        if (file) {
+            // Hiển thị tên file đã chọn
+            row.find('.selected-video-name').text(file.name);
+            // Cập nhật loại video là local
+            row.find('.segment-video-type').val('local');
+            // Xóa URL của FileManager nếu có
+            row.find('.segment-video-url').val('');
+
+            console.log("Đã chọn file: " + file.name + " cho segment");
+        }
     });
 
 
@@ -199,9 +238,24 @@ $(document).ready(function () {
 
     $('#extractAudioForm').submit(function (e) {
         e.preventDefault();
-        showLoading(); // Hàm hiển thị loading (nếu đã định nghĩa)
-        var form = $('#extractAudioForm')[0];
-        var formData = new FormData(form);
+
+        const videoType = $('#extractVideoType').val();
+
+        // Kiểm tra nếu không có video được chọn
+        if (videoType === 'local' && $('#extractVideoInput')[0].files.length === 0) {
+            Swal.fire('Lỗi!', 'Vui lòng chọn một video để tách âm thanh', 'error');
+            return;
+        }
+
+        if (videoType === 'filemanager' && !$('#extractVideoUrl').val()) {
+            Swal.fire('Lỗi!', 'Vui lòng chọn một video để tách âm thanh', 'error');
+            return;
+        }
+
+        showLoading();
+
+        var formData = new FormData(this);
+        formData.append('video_type', videoType);
 
         $.ajax({
             url: '/extract-audio',
@@ -210,21 +264,98 @@ $(document).ready(function () {
             contentType: false,
             processData: false,
             success: function (response) {
-                hideLoading(); // Hàm ẩn loading
+                hideLoading();
                 Swal.fire("Thành công!", response.message, "success");
             },
             error: function (xhr) {
                 hideLoading();
-                Swal.fire("Lỗi!", 'Có lỗi xảy ra: ' + (xhr.responseJSON.message || 'Vui lòng kiểm tra lại.'), "error");
+                Swal.fire("Lỗi!", 'Có lỗi xảy ra: ' + (xhr.responseJSON?.message || 'Vui lòng kiểm tra lại.'), "error");
             }
         });
     });
 
+    // Xử lý submit form video segments
+    // Xử lý submit form video segments
     $('#concatVideoSegmentsForm').submit(function (e) {
         e.preventDefault();
+
+        // Hiển thị log kiểm tra các input file
+        console.log("Total video segments: " + $('.video-segment-row').length);
+        $('.video-segment-row').each(function (index) {
+            const fileInput = $(this).find('.segment-video-input')[0];
+            console.log("Segment " + index + " file count: " + (fileInput.files ? fileInput.files.length : 0));
+            if (fileInput.files && fileInput.files[0]) {
+                console.log("Segment " + index + " file name: " + fileInput.files[0].name);
+            }
+        });
+
+        // Tạo FormData thủ công
+        var formData = new FormData();
+
+        // Thêm CSRF token
+        formData.append('_token', $('input[name="_token"]').val());
+
+        // Thêm tên file output
+        formData.append('outputFile', $('#outputSegmentsFile').val());
+
+        // Thêm trạng thái giữ âm thanh gốc
+        formData.append('keepVideoAudio', $('#keepSegmentsAudio').is(':checked') ? '1' : '0');
+
+        // Thêm file audio nếu có
+        if ($('#audioSegments')[0].files.length > 0) {
+            formData.append('audio', $('#audioSegments')[0].files[0]);
+        }
+
+        // Thu thập thời gian segments
+        let segments = [];
+        $('.video-segment-row').each(function (index) {
+            const start = $(this).find('input[name^="segments["][name$="[start]"]').val();
+            const end = $(this).find('input[name^="segments["][name$="[end]"]').val();
+
+            formData.append(`segments[${index}][start]`, start);
+            formData.append(`segments[${index}][end]`, end);
+            segments.push({ start: start, end: end });
+        });
+
+        // Thu thập video files và types
+        let videoTypes = [];
+        let videoUrls = [];
+        let hasVideos = false;
+
+        $('.video-segment-row').each(function (index) {
+            const type = $(this).find('.segment-video-type').val();
+            videoTypes.push(type);
+
+            if (type === 'local') {
+                const fileInput = $(this).find('.segment-video-input')[0];
+                if (fileInput.files.length > 0) {
+                    console.log("Adding video file: " + fileInput.files[0].name);
+                    formData.append('videos[]', fileInput.files[0]);
+                    hasVideos = true;
+                }
+                videoUrls.push('');
+            } else if (type === 'filemanager') {
+                const url = $(this).find('.segment-video-url').val();
+                if (url) {
+                    videoUrls.push(url);
+                    hasVideos = true;
+                } else {
+                    videoUrls.push('');
+                }
+            }
+        });
+
+        if (!hasVideos) {
+            Swal.fire('Lỗi!', 'Vui lòng chọn ít nhất một video để ghép', 'error');
+            return;
+        }
+
+        // Thêm thông tin về nguồn video vào request
+        formData.append('video_types', JSON.stringify(videoTypes));
+        formData.append('video_urls', JSON.stringify(videoUrls));
+
         showLoading();
-        var form = $(this)[0];
-        var formData = new FormData(form);
+
         $.ajax({
             url: '/concat-video-segments-preview',
             type: 'POST',
@@ -233,22 +364,18 @@ $(document).ready(function () {
             processData: false,
             success: function (response) {
                 hideLoading();
-                // Cập nhật video demo
                 $('#video source').attr('src', response.previewUrl);
                 $('#video')[0].load();
 
-                // Tạo nút "Xem demo" nếu chưa có
                 if ($('#videoPreviewBtn').length === 0) {
                     $('#video').closest('.col-3').append(`
-                        <div id="videoPreviewContainer" class="mt-2">
-                            <button type="button" id="videoPreviewBtn" class="btn btn-info">Xem demo</button>
-                        </div>
-                    `);
+                <div id="videoPreviewContainer" class="mt-2">
+                    <button type="button" id="videoPreviewBtn" class="btn btn-info">Xem demo</button>
+                </div>
+                `);
                 }
 
-                // Gán sự kiện cho nút "Xem demo" để mở modal preview
                 $('#videoPreviewBtn').off('click').on('click', function () {
-                    // Mở modal đã được định nghĩa trong Blade (xem bước 2)
                     $('#previewModal').modal('show');
                 });
             },
@@ -259,17 +386,27 @@ $(document).ready(function () {
         });
     });
 
+
     $('#previewModal').on('show.bs.modal', function () {
         var demoUrl = $('#video source').attr('src');
-        $('#previewVideo source').attr('src', demoUrl);
+        // Thêm timestamp mới vào URL để tránh cache khi mở modal
+        var uncachedUrl = getUncachedUrl(demoUrl);
+        $('#previewVideo').html('<source src="' + uncachedUrl + '" type="video/mp4">');
         $('#previewVideo')[0].load();
     });
 
+
     $('#exportFileBtn').click(function () {
-        // Lấy src của video demo từ modal hoặc phần page
-        var previewUrl = $('#previewVideo source').attr('src');
+        // Lấy URL gốc đã lưu (không có timestamp)
+        var originalUrl = $('#video').data('originalUrl');
+
+        // Nếu không có URL gốc, dùng URL có timestamp
+        if (!originalUrl) {
+            originalUrl = $('#video source').attr('src').split('?')[0]; // Loại bỏ tham số query
+        }
+
         // Tách lấy tên file (phần sau dấu /)
-        var segments = previewUrl.split('/');
+        var segments = originalUrl.split('/');
         var outputFile = segments[segments.length - 1];
 
         $.ajax({
@@ -740,30 +877,40 @@ $(document).ready(function () {
 
     // Cập nhật xử lý nút xác nhận để bao gồm cả video
     $('#btnConfirmFileManagerSelection').off('click').on('click', function () {
-        // Thêm hình ảnh đã chọn vào danh sách
-        fileManagerSelectedImages.forEach(function (url) {
-            if (!existingImages.includes(url)) {
-                existingImages.push(url);
-                selectedOrder.push({ type: 'filemanager', data: url });
-            }
-        });
+        // Xác định tab nào đang active
+        const activeTabId = $('#editorTabContent .tab-pane.active').attr('id');
+        const activeMediaTab = $('#mediaTypeTabs .nav-link.active').attr('id');
 
-        // Thêm video đã chọn vào danh sách
-        fileManagerSelectedVideos.forEach(function (url) {
-            if (!existingVideos.includes(url)) {
-                existingVideos.push(url);
-                selectedOrder.push({ type: 'video', data: url });
-            }
-        });
-        // Reset các biến tạm
-        fileManagerSelectedImages = [];
-        fileManagerSelectedVideos = [];
-        // Đóng modal
-        $('#contentImageSelectorModal').modal('hide');
+        // Xử lý cho tab ghép video
+        if (activeTabId === 'concat-videos-form' && activeMediaTab === 'videos-tab') {
+            fileManagerSelectedVideos.forEach(function (url) {
+                if (!concatExistingVideos.includes(url)) {
+                    concatExistingVideos.push(url);
+                    concatSelectedOrder.push({ type: 'filemanager', data: url });
+                }
+            });
 
-        // Cập nhật hiển thị
-        currentPage = Math.ceil(selectedOrder.length / pageSize);
-        updatePreviewImages();
+            // Reset biến tạm và cập nhật hiển thị
+            fileManagerSelectedVideos = [];
+            $('#contentImageSelectorModal').modal('hide');
+            concatCurrentPage = Math.ceil(concatSelectedOrder.length / pageSize);
+            updateConcatVideosPreview();
+        }
+        // Xử lý cho tab tạo video cơ bản (images)
+        else if (activeTabId === 'basic-video-form' && activeMediaTab === 'images-tab') {
+            fileManagerSelectedImages.forEach(function (url) {
+                if (!existingImages.includes(url)) {
+                    existingImages.push(url);
+                    selectedOrder.push({ type: 'filemanager', data: url });
+                }
+            });
+
+            // Reset biến tạm và cập nhật hiển thị
+            fileManagerSelectedImages = [];
+            $('#contentImageSelectorModal').modal('hide');
+            currentPage = Math.ceil(selectedOrder.length / pageSize);
+            updatePreviewImages();
+        }
     });
 
 
@@ -816,5 +963,522 @@ $(document).ready(function () {
         $('#loadingOverlay').remove();
     }
 
-});
+    $('#btnSelectVideos').on('click', function () {
+        $('#videoOptionModal').modal('show');
+    });
 
+    $('#btnUploadVideosFromLocal').on('click', function () {
+        const activeMainTab = $('#editorTabs .nav-link.active').attr('id');
+
+        if (currentSegmentRow) {
+            // Xử lý cho segment videos
+            currentSegmentRow.find('.segment-video-input').trigger('click');
+        }
+        else if (activeMainTab === 'concat-videos-tab') {
+            // Xử lý cho concat videos
+            $('#concatVideos').trigger('click');
+        } else if (activeMainTab === 'extract-audio-tab') {
+            // Xử lý cho extract audio
+            $('#extractVideoInput').trigger('click');
+        } else if (activeMainTab === 'cut-video-tab') {
+            // Xử lý cho cut video
+            $('#cutVideoInput').trigger('click');
+        }
+
+        $('#videoOptionModal').modal('hide');
+    });
+
+
+    $('#concatVideos').on('change', function (e) {
+        const newFiles = Array.from(this.files);
+        newFiles.forEach(function (file) {
+            // Chỉ chấp nhận video
+            if (file.type.startsWith('video/')) {
+                concatSelectedVideos.push(file);
+                concatSelectedOrder.push({ type: 'local', data: file });
+            }
+        });
+        concatCurrentPage = Math.ceil(concatSelectedOrder.length / pageSize);
+        $(this).val('');
+        updateConcatVideosPreview();
+    });
+
+    $('#btnSelectVideosFromFileManager').on('click', function () {
+        // Đảm bảo rằng modal videoOptionModal đã được ẩn trước
+        $('#videoOptionModal').modal('hide');
+
+        // Đặt tab videos là active
+        setTimeout(function () {
+            // Đảm bảo DOM đã được cập nhật trước khi chuyển tab
+            $('#videos-tab').tab('show');
+
+            // Load dữ liệu video nếu chưa có
+            if (Object.keys(contentVideosTree).length === 0) {
+                loadVideosData();
+            }
+
+            // Hiển thị modal FileManager sau khi đã làm mọi thứ khác
+            $('#contentImageSelectorModal').modal('show');
+        }, 300);
+    });
+
+    // Sửa hàm xử lý nút xác nhận FileManager
+    $('#btnConfirmFileManagerSelection').off('click').on('click', function () {
+        const activeTab = $('#mediaTypeTabs .nav-link.active').attr('id');
+        const activeMainTab = $('#editorTabs .nav-link.active').attr('id');
+
+        // Xử lý cho video segments
+        if (activeTab === 'videos-tab' && currentSegmentRow) {
+            if (fileManagerSelectedVideos.length > 0) {
+                const videoUrl = fileManagerSelectedVideos[0];
+                currentSegmentRow.find('.selected-video-name').text(videoUrl.split('/').pop());
+                currentSegmentRow.find('.segment-video-url').val(videoUrl);
+                currentSegmentRow.find('.segment-video-type').val('filemanager');
+                currentSegmentRow.find('.segment-video-input').val('');
+            }
+        }
+        // Xử lý cho tab concat videos
+        else if (activeTab === 'videos-tab' && activeMainTab === 'concat-videos-tab') {
+            fileManagerSelectedVideos.forEach(function (url) {
+                if (!concatExistingVideos.includes(url)) {
+                    concatExistingVideos.push(url);
+                    concatSelectedOrder.push({ type: 'filemanager', data: url });
+                }
+            });
+            concatCurrentPage = Math.ceil(concatSelectedOrder.length / pageSize);
+            updateConcatVideosPreview();
+        } else if (activeTab === 'videos-tab' && activeMainTab === 'extract-audio-tab') {
+            if (fileManagerSelectedVideos.length > 0) {
+                const videoUrl = fileManagerSelectedVideos[0];
+                $('#extractVideoName').text(videoUrl.split('/').pop());
+                $('#extractVideoUrl').val(videoUrl);
+                $('#extractVideoType').val('filemanager');
+                $('#extractVideoInput').val('');
+            }
+        }
+        // Xử lý cho tab basic video (hình ảnh)
+        else if (activeTab === 'images-tab' && activeMainTab === 'basic-video-tab') {
+            fileManagerSelectedImages.forEach(function (url) {
+                if (!existingImages.includes(url)) {
+                    existingImages.push(url);
+                    selectedOrder.push({ type: 'filemanager', data: url });
+                }
+            });
+            currentPage = Math.ceil(selectedOrder.length / pageSize);
+            updatePreviewImages();
+        } else if (activeTab === 'videos-tab' && activeMainTab === 'cut-video-tab') {
+            if (fileManagerSelectedVideos.length > 0) {
+                const videoUrl = fileManagerSelectedVideos[0];
+                const fileName = videoUrl.split('/').pop();
+
+                $('#cutVideoName').text(fileName);
+                $('#cutVideoUrl').val(videoUrl);
+                $('#cutVideoType').val('filemanager');
+                $('#cutVideoInput').val('');
+
+                // Hiển thị preview
+                $('#cutVideoContainer').html(`
+                    <div class="video-preview mb-3">
+                        <video width="70" height="70" controls style="max-width: 50%; object-fit: cover;">
+                            <source src="${videoUrl}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        <div class="mt-1 text-center video-name small text-truncate">${fileName}</div>
+                    </div>
+                `);
+            }
+        }
+
+        fileManagerSelectedVideos = [];
+        fileManagerSelectedImages = [];
+        $('#contentImageSelectorModal').modal('hide');
+    });
+
+    // --- HÀM HIỆN THỊ PREVIEW VIDEO CHO CONCAT VIDEOS ---
+    function updateConcatVideosPreview() {
+        $('#concatVideosContainer').empty();
+        const totalMedia = concatSelectedOrder;
+        const startIndex = (concatCurrentPage - 1) * pageSize;
+        const endIndex = concatCurrentPage * pageSize;
+        const mediaToShow = totalMedia.slice(startIndex, endIndex);
+
+        mediaToShow.forEach((item, index) => {
+            if (item.type === 'local') {  // Video từ thiết bị
+                const file = item.data;
+                const videoName = file.name;
+
+                const previewDiv = $(`
+                    <div class="preview-video position-relative mb-3" style="width:200px;" data-index="${startIndex + index}">
+                        <div class="video-thumbnail position-relative" style="height: 150px; overflow: hidden; background-color: #000;">
+                            <div class="thumbnail-container" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+                                <i class="bi bi-play-circle" style="font-size: 3rem; color: #fff; position:absolute; z-index:2;"></i>
+                                <canvas width="200" height="150" class="thumbnail-canvas" style="width:100%; height:100%; object-fit:cover;"></canvas>
+                            </div>
+                            <div class="video-name position-absolute bottom-0 start-0 end-0 p-1 bg-dark bg-opacity-75 text-white small text-truncate">
+                                ${videoName}
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm remove-video position-absolute top-0 end-0 m-1" style="border-radius:50%; background-color:white; color:black;">&times;</button>
+                    </div>
+                `);
+
+                // Tạo thumbnail từ file local
+                const canvas = previewDiv.find('.thumbnail-canvas')[0];
+                const tempVideo = document.createElement('video');
+                tempVideo.preload = 'metadata';
+                tempVideo.muted = true;
+                tempVideo.src = URL.createObjectURL(file);
+
+                tempVideo.onloadedmetadata = function () {
+                    tempVideo.currentTime = 1; // Lấy frame tại giây đầu tiên
+                };
+
+                tempVideo.oncanplay = function () {
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
+                    URL.revokeObjectURL(tempVideo.src); // Giải phóng bộ nhớ
+                };
+
+                // Xử lý click vào video để xem trước
+                previewDiv.find('.video-thumbnail').on('click', function () {
+                    const videoUrl = URL.createObjectURL(file);
+                    previewVideo(videoUrl);
+                });
+
+                // Xử lý xóa video
+                previewDiv.find('.remove-video').on('click', function () {
+                    concatSelectedVideos = concatSelectedVideos.filter(f => f !== file);
+                    concatSelectedOrder.splice(startIndex + index, 1);
+                    if (Math.ceil(concatSelectedOrder.length / pageSize) < concatCurrentPage) {
+                        concatCurrentPage = concatCurrentPage > 1 ? concatCurrentPage - 1 : 1;
+                    }
+                    updateConcatVideosPreview();
+                });
+
+                $('#concatVideosContainer').append(previewDiv);
+
+            } else if (item.type === 'filemanager') { // Video từ FileManager
+                const url = item.data;
+                const videoName = url.split('/').pop();
+
+                const previewDiv = $(`
+                    <div class="preview-video position-relative mb-3" style="width:200px;" data-index="${startIndex + index}">
+                        <div class="video-thumbnail position-relative" style="height: 150px; overflow: hidden; background-color: #000; cursor:pointer;">
+                            <div class="thumbnail-container" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+                                <i class="bi bi-play-circle" style="font-size: 3rem; color: #fff; position:absolute; z-index:2;"></i>
+                                <canvas width="200" height="150" class="thumbnail-canvas" style="width:100%; height:100%; object-fit:cover;"></canvas>
+                            </div>
+                            <div class="video-name position-absolute bottom-0 start-0 end-0 p-1 bg-dark bg-opacity-75 text-white small text-truncate">
+                                ${videoName}
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm remove-video position-absolute top-0 end-0 m-1" style="border-radius:50%; background-color:white; color:black;">&times;</button>
+                    </div>
+                `);
+
+                // Tạo thumbnail từ URL
+                const canvas = previewDiv.find('.thumbnail-canvas')[0];
+                const tempVideo = document.createElement('video');
+                tempVideo.crossOrigin = "anonymous";
+                tempVideo.preload = 'metadata';
+                tempVideo.muted = true;
+                tempVideo.src = url;
+
+                tempVideo.onloadedmetadata = function () {
+                    tempVideo.currentTime = 1; // Lấy frame tại giây đầu tiên
+                };
+
+                tempVideo.oncanplay = function () {
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
+                };
+
+                // Xử lý click để xem trước
+                previewDiv.find('.video-thumbnail').on('click', function () {
+                    previewVideo(url);
+                });
+
+                // Xử lý xóa
+                previewDiv.find('.remove-video').on('click', function () {
+                    concatExistingVideos = concatExistingVideos.filter(u => u !== url);
+                    concatSelectedOrder.splice(startIndex + index, 1);
+                    if (Math.ceil(concatSelectedOrder.length / pageSize) < concatCurrentPage) {
+                        concatCurrentPage = concatCurrentPage > 1 ? concatCurrentPage - 1 : 1;
+                    }
+                    updateConcatVideosPreview();
+                });
+
+                $('#concatVideosContainer').append(previewDiv);
+            }
+        });
+
+        const totalPages = Math.ceil(concatSelectedOrder.length / pageSize);
+        const paginationContainer = document.getElementById('concatPagination');
+        renderPagination(paginationContainer, concatCurrentPage, totalPages, function (newPage) {
+            concatCurrentPage = newPage;
+            updateConcatVideosPreview();
+        });
+    }
+
+
+
+    // --- UPDATE BUTTON XỬ LÝ CONCATVIDEO ---
+    $('#concatVideosBtn').off('click').on('click', function (e) {
+        e.preventDefault();
+
+        // Kiểm tra nếu không có video nào được chọn
+        if (concatSelectedOrder.length === 0) {
+            Swal.fire('Lỗi!', 'Vui lòng chọn ít nhất một video để ghép', 'error');
+            return;
+        }
+
+        showLoading();
+        var form = $('#concatVideosForm')[0];
+        var formData = new FormData(form);
+
+        // Xóa videos[] hiện tại khỏi formData (nếu có)
+        formData.delete('videos[]');
+
+        // Thêm cả local videos và filemanager videos vào formData
+        let localVideos = [];
+        let fileManagerVideos = [];
+
+        concatSelectedOrder.forEach(function (item) {
+            if (item.type === 'local') {
+                formData.append('videos[]', item.data);
+                localVideos.push(item.data);
+            } else if (item.type === 'filemanager') {
+                fileManagerVideos.push(item.data);
+            }
+        });
+
+        // Thêm URLs của video từ FileManager
+        if (fileManagerVideos.length > 0) {
+            formData.append('existing_videos', JSON.stringify(fileManagerVideos));
+        }
+
+        // Thêm thứ tự video để server xử lý đúng
+        formData.append('video_order', JSON.stringify(concatSelectedOrder.map(item => item.type)));
+
+        // Gửi request
+        $.ajax({
+            url: '/create-video-with-audio',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function (response) {
+                hideLoading();
+
+                // Nếu backend trả về previewUrl thì cập nhật video demo
+                if (response.previewUrl) {
+                    // Thêm timestamp vào URL để tránh cache
+                    var uncachedUrl = getUncachedUrl(response.previewUrl);
+
+                    // Reset video player hoàn toàn
+                    $('#video').html('<source src="' + uncachedUrl + '" type="video/mp4">');
+                    $('#video')[0].load();
+
+                    // Lưu URL gốc để export
+                    $('#video').data('originalUrl', response.previewUrl);
+
+                    // Tạo nút "Xem demo" nếu chưa có
+                    if ($('#videoPreviewBtn').length === 0) {
+                        $('#video').closest('.col-3').append(`
+                            <div id="videoPreviewContainer" class="mt-2">
+                                <button type="button" id="videoPreviewBtn" class="btn btn-info">Xem demo</button>
+                            </div>
+                        `);
+                    }
+
+                    // Gán sự kiện cho nút "Xem demo" để mở modal preview
+                    $('#videoPreviewBtn').off('click').on('click', function () {
+                        $('#previewModal').modal('show');
+                    });
+                }
+
+                Swal.fire("Thành công!", response.message, "success");
+            },
+            error: function (xhr) {
+                hideLoading();
+                Swal.fire("Lỗi!", 'Có lỗi xảy ra: ' + (xhr.responseJSON.message || 'Vui lòng kiểm tra lại.'), "error");
+            }
+        });
+    });
+
+    function getUncachedUrl(url) {
+        let timestamp = new Date().getTime();
+        if (url.indexOf('?') !== -1) {
+            // Nếu URL đã có tham số query
+            return url + '&_nocache=' + timestamp;
+        } else {
+            // Nếu URL chưa có tham số query
+            return url + '?_nocache=' + timestamp;
+        }
+    }
+
+    // Xử lý nút chọn video cho extract audio
+    $(document).on('click', '.extract-video-btn', function () {
+        // Lưu trữ tham chiếu đến form
+        extractAudioVideoRow = $(this).closest('form');
+        $('#videoOptionModal').modal('show');
+    });
+
+    $('#extractVideoInput').on('change', function () {
+        const file = this.files[0];
+        if (file) {
+            // Hiển thị tên file đã chọn
+            $('#extractVideoName').text(file.name);
+            $('#extractVideoType').val('local');
+            $('#extractVideoUrl').val('');
+
+            console.log("Đã chọn file video cho extract audio: " + file.name);
+        }
+    });
+
+
+
+    let cutVideoPreviewUrl = null;
+    let currentCutVideoFile = null;
+
+    $(document).on('click', '.cut-video-btn', function () {
+        $('#videoOptionModal').modal('show');
+    });
+
+    $('#keepCutAudio').change(function () {
+        if (!this.checked) {
+            $('#audioCutDiv').slideDown();
+        } else {
+            $('#audioCutDiv').slideUp();
+        }
+    });
+
+    $('#cutVideoInput').on('change', function () {
+        const file = this.files[0];
+        if (file) {
+            // Hiển thị tên file đã chọn
+            $('#cutVideoName').text(file.name);
+            $('#cutVideoType').val('local');
+            $('#cutVideoUrl').val('');
+            currentCutVideoFile = file;
+
+            // Tạo video preview
+            const url = URL.createObjectURL(file);
+            cutVideoPreviewUrl = url;
+
+            // Hiển thị preview
+            $('#cutVideoContainer').html(`
+                <div class="video-preview mb-3">
+                    <video width="70" height="70" controls style="max-width: 50%; object-fit: cover;">
+                        <source src="${url}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <div class="mt-1 text-center video-name small text-truncate">${file.name}</div>
+                </div>
+            `);
+
+            console.log("Đã chọn file video cho cắt video: " + file.name);
+        }
+    });
+
+    $('#cutVideoForm').submit(function (e) {
+        e.preventDefault();
+
+        const videoType = $('#cutVideoType').val();
+        const startTime = parseFloat($('input[name="start_time"]').val());
+        const endTime = parseFloat($('input[name="end_time"]').val());
+
+        // Kiểm tra thời gian
+        if (endTime <= startTime) {
+            Swal.fire('Lỗi!', 'Thời gian kết thúc phải lớn hơn thời gian bắt đầu', 'error');
+            return;
+        }
+
+        // Kiểm tra nếu không có video được chọn
+        if (videoType === 'local' && $('#cutVideoInput')[0].files.length === 0) {
+            Swal.fire('Lỗi!', 'Vui lòng chọn một video để cắt', 'error');
+            return;
+        }
+
+        if (videoType === 'filemanager' && !$('#cutVideoUrl').val()) {
+            Swal.fire('Lỗi!', 'Vui lòng chọn một video để cắt', 'error');
+            return;
+        }
+
+        // Kiểm tra nếu không giữ audio gốc và không chọn audio mới
+        const keepAudio = $('#keepCutAudio').is(':checked');
+        if (!keepAudio && $('#audioCut')[0].files.length === 0) {
+            Swal.fire('Lỗi!', 'Vui lòng chọn file audio mới hoặc giữ audio gốc', 'error');
+            return;
+        }
+
+        showLoading();
+
+        var formData = new FormData(this);
+
+        $.ajax({
+            url: '/cut-video-preview',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function (response) {
+                hideLoading();
+                $('#video source').attr('src', response.previewUrl);
+                $('#video')[0].load();
+
+                // Hiển thị nút xem demo
+                if ($('#videoPreviewBtn').length === 0) {
+                    $('#video').closest('.col-3').append(`
+                    <div id="videoPreviewContainer" class="mt-2">
+                        <button type="button" id="videoPreviewBtn" class="btn btn-info">Xem demo</button>
+                    </div>
+                    `);
+                }
+
+                // Cập nhật modal preview
+                $('#previewModal').find('video source').attr('src', response.previewUrl);
+                $('#previewModal').find('video')[0].load();
+
+                // Xử lý nút xem demo
+                $('#videoPreviewBtn').off('click').on('click', function () {
+                    $('#previewModal').modal('show');
+                });
+
+                // Xử lý nút xuất file
+                $('#exportFileBtn').off('click').on('click', function () {
+                    $.ajax({
+                        url: '/confirm-export',
+                        type: 'POST',
+                        data: {
+                            _token: $('meta[name="csrf-token"]').attr('content'),
+                            outputFile: $('#outputCutFile').val()
+                        },
+                        success: function (response) {
+                            Swal.fire('Thành công!', 'File đã được xuất thành công!', 'success');
+                            $('#previewModal').modal('hide');
+                        },
+                        error: function () {
+                            Swal.fire('Lỗi!', 'Không thể xuất file', 'error');
+                        }
+                    });
+                });
+            },
+            error: function (xhr) {
+                hideLoading();
+                Swal.fire('Lỗi!', 'Có lỗi xảy ra: ' + (xhr.responseJSON?.message || 'Vui lòng thử lại.'), 'error');
+            }
+        });
+    });
+
+    $('#btnSelectVideosFromFileManager').on('click', function () {
+        activeMediaTab = 'videos-tab';
+        $('#mediaTypeTabs a[href="#videos-content"]').tab('show');
+        $('#contentImageSelectorModal').modal('show');
+
+        // Đảm bảo load videos khi modal hiển thị
+        loadContentVideoList();
+    });
+
+
+});
