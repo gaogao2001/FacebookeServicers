@@ -583,6 +583,9 @@ class HomeAccountController extends Controller
         $uid_sub = $request->input('uid_sub');
 
         dd($limit, $uid_sub);
+
+
+      
     }
 
     public function ShareNow(Request $request)
@@ -617,7 +620,7 @@ class HomeAccountController extends Controller
         foreach ($uids as $uid) {
             $response = $this->getMessageByUid($uid);
             $messages = json_decode($response->getContent());
-
+           
             $data[] = (object)[
                 'messages' => $messages->data,
             ];
@@ -661,7 +664,7 @@ class HomeAccountController extends Controller
                     $_Message = new MessageControler($Accountuse);
 
                     $messages = $_Message->LoadAllMessage();
-
+                   
 
                     return response()->json([
                         'data' => $messages,

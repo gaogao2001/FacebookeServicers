@@ -91,11 +91,13 @@ class ContentManagerController extends Controller
                 $imgs[] = '/storage/ContentImage/' . $fileName;
             }
         }
-
-        // Nếu người dùng đã chọn hình từ FileManager, nhận existing_imgs
         if ($request->filled('existing_imgs')) {
             $existingImgs = json_decode($request->input('existing_imgs'), true);
             if (is_array($existingImgs)) {
+                // Chuyển đổi đường dẫn nếu hình được lưu từ File Manager (cũ) sang đường dẫn chuẩn
+                foreach ($existingImgs as &$img) {
+                    $img = str_replace('http://192.168.1.6/FileData/Images/', '/var/www/FacebookService/public/FileData/Images/', $img);
+                }
                 // Hợp nhất các hình đã upload và hình chọn từ FileManager
                 $imgs = array_merge($imgs, $existingImgs);
             }
@@ -104,7 +106,6 @@ class ContentManagerController extends Controller
         $data['imgs'] = json_encode($imgs);
 
         // Debug dữ liệu (Sau khi kiểm tra, hãy xóa dd())
-
 
         $this->contentManagerRepository->create($data);
 
@@ -200,6 +201,8 @@ class ContentManagerController extends Controller
 
         return response()->json(['message' => 'Cập nhật nội dung thành công.']);
     }
+
+
 
 
     public function destroy($id)
