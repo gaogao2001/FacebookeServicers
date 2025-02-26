@@ -244,8 +244,6 @@ class FileManagerController extends Controller
             Log::error("Base path không hợp lệ: " . $basePath);
         }
 
-
-  
         return response()->json($tree);
     }
 }
