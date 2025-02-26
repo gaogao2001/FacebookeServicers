@@ -452,57 +452,59 @@ $(document).ready(function () {
     let contentImageFolderStack = [];
     let fileManagerSelectedImages = []; // Các hình được chọn tạm từ modal
     // existingImages là mảng chứa URL hình đã chọn (dùng gửi form và hiển thị preview)
-
     function loadContentImageList() {
-        const imageList = document.getElementById('contentImageList');
-        imageList.innerHTML = '';
-        const folderName = currentContentImageFolder ? currentContentImageFolder : 'root';
-        document.getElementById('currentContentImageFolder').innerText = folderName;
-        document.getElementById('backContentImageButton').style.display = currentContentImageFolder ? "inline-block" : "none";
-
-        if (!currentContentImageFolder) { // Load folder
-            for (let folder in contentImagesTree) {
-                const colDiv = document.createElement('div');
-                colDiv.className = "col-md-3 mb-3";
-                const card = document.createElement('div');
-                card.className = "card";
-                card.style.cursor = "pointer";
-                card.onclick = function () {
-                    contentImageFolderStack.push(currentContentImageFolder);
-                    currentContentImageFolder = folder;
-                    loadContentImageList();
-                };
-                const cardBody = document.createElement('div');
-                cardBody.className = "card-body text-center";
-                cardBody.innerText = folder;
-                card.appendChild(cardBody);
-                colDiv.appendChild(card);
-                imageList.appendChild(colDiv);
+        $('#contentImageList').empty();
+        if (currentContentImageFolder === null) {
+            // Hiển thị danh sách thư mục gốc
+            $('#currentContentImageFolder').text('Danh sách thư mục');
+            $('#backContentMediaButton').hide();
+            const folders = Object.keys(contentImagesTree);
+            
+            if (folders.length) {
+                folders.forEach(function (folderKey) {
+                    let folderCard = $(`
+                        <div class="col-md-3 mb-2">
+                            <div class="card" style="cursor:pointer; background-color:#47a4a7;">
+                                <div class="card-body text-center text-white">
+                                    <h5 class="card-title">${folderKey}</h5>
+                                    <p class="card-text">${contentImagesTree[folderKey].length} hình</p>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                    folderCard.on('click', function () {
+                        contentImageFolderStack.push(currentContentImageFolder);
+                        currentContentImageFolder = folderKey;
+                        loadContentImageList();
+                    });
+                    $('#contentImageList').append(folderCard);
+                });
+            } else {
+                $('#contentImageList').html('<p>Không có thư mục nào.</p>');
             }
-        } else { // Load hình trong folder
-            const images = contentImagesTree[currentContentImageFolder];
-            images.forEach(image => {
-                const colDiv = document.createElement('div');
-                colDiv.className = "col-md-3 mb-3";
-                const card = document.createElement('div');
-                card.className = "card";
-                card.style.cursor = "pointer";
-                // Ở đây dùng toggle để multi-select
-                card.onclick = function () {
-                    toggleContentImageSelection(image, card);
-                };
-                const imgElem = document.createElement('img');
-                imgElem.className = "card-img-top";
-                imgElem.src = image.url;
-                imgElem.alt = image.name;
-                const cardBody = document.createElement('div');
-                cardBody.className = "card-body text-center p-2";
-                cardBody.innerText = image.name;
-                card.appendChild(imgElem);
-                card.appendChild(cardBody);
-                colDiv.appendChild(card);
-                imageList.appendChild(colDiv);
-            });
+        } else {
+            // Hiển thị danh sách hình ảnh trong thư mục đã chọn
+            $('#currentContentImageFolder').text(currentContentImageFolder);
+            $('#backContentMediaButton').show();
+            const images = contentImagesTree[currentContentImageFolder] || [];
+            
+            if (images.length) {
+                images.forEach(function (image) {
+                    let cardContainer = $(`
+                        <div class="col-md-3 mb-2">
+                            <div class="card" style="cursor:pointer;">
+                                <img src="${image.url}" class="card-img-top" alt="${image.name}">
+                            </div>
+                        </div>
+                    `);
+                    cardContainer.find('.card').on('click', function () {
+                        toggleContentImageSelection(image, this);
+                    });
+                    $('#contentImageList').append(cardContainer);
+                });
+            } else {
+                $('#contentImageList').html('<p>Không có hình ảnh nào trong thư mục này.</p>');
+            }
         }
     }
 
@@ -514,7 +516,6 @@ $(document).ready(function () {
         }
         loadContentImageList();
     }
-
     // Hàm hiển thị modal chọn ảnh từ FileManager
     function showContentImageSelector() {
         $.ajax({
@@ -535,7 +536,6 @@ $(document).ready(function () {
             }
         });
     }
-
     // Hàm toggle (chọn/hủy) hình từ FileManager
     function toggleContentImageSelection(image, cardElement) {
         if (!fileManagerSelectedImages.includes(image.url)) {
@@ -605,6 +605,7 @@ $(document).ready(function () {
             type: 'GET',
             dataType: 'json',
             success: function (treeData) {
+                console.log("Video data loaded:", treeData);
                 contentVideosTree = treeData;
                 currentContentVideoFolder = null;
                 contentVideoFolderStack = [];
@@ -620,70 +621,158 @@ $(document).ready(function () {
     function loadContentVideoList() {
         $('#contentVideoList').empty();
         if (currentContentVideoFolder === null) {
+            // Hiển thị danh sách thư mục gốc
             $('#currentContentVideoFolder').text('Danh sách thư mục');
             $('#backContentMediaButton').hide();
+
+            // Hiển thị các thư mục gốc với giao diện đồng nhất
+            for (let folder in contentVideosTree) {
+                const videos = contentVideosTree[folder] || [];
+                const colDiv = $('<div class="col-md-3 mb-3">');
+                const card = $('<div class="card">').css({
+                    'cursor': 'pointer',
+                    'background-color': '#b7474a',
+                    'height': '100%'
+                });
+
+                // Thân thẻ card với thiết kế thư mục
+                const cardBody = $('<div class="card-body text-center text-white">');
+
+                // Tên thư mục
+                const folderTitle = $('<h5 class="card-title">').text(folder);
+
+                // Hiển thị số lượng video trong thư mục
+                const videoCount = $('<p class="card-text mb-0">').text(videos.length + ' video');
+
+                cardBody.append(folderTitle).append(videoCount);
+                card.append(cardBody);
+
+                // Xử lý sự kiện click vào thư mục
+                card.on('click', function () {
+                    contentVideoFolderStack.push(currentContentVideoFolder);
+                    currentContentVideoFolder = folder;
+                    loadContentVideoList();
+                });
+
+                colDiv.append(card);
+                $('#contentVideoList').append(colDiv);
+            }
+
+            // Nếu không có thư mục nào, hiển thị thông báo
+            if (Object.keys(contentVideosTree).length === 0) {
+                $('#contentVideoList').html('<div class="col-12 text-center py-3">Không có thư mục video nào</div>');
+            }
         } else {
-            // Hiển thị danh sách video trong thư mục
+            // Hiển thị danh sách video trong thư mục đã chọn
             $('#currentContentVideoFolder').text(currentContentVideoFolder);
             $('#backContentMediaButton').show();
             const videos = contentVideosTree[currentContentVideoFolder] || [];
 
             if (videos.length) {
                 videos.forEach(video => {
-                    const colDiv = $('<div class="col-md-3 mb-3">');
+                    const isSelected = fileManagerSelectedVideos.includes(video.url);
+                    const colDiv = $('<div class="col-md-4 mb-3">');
+
+                    // Tạo card video
                     const card = $('<div class="card">').css('cursor', 'pointer');
+                    if (isSelected) {
+                        card.addClass('selected');
+                    }
 
-                    // Tạo thumbnail tốt hơn cho video
-                    const thumbnail = $('<div class="video-thumbnail" style="height: 120px; position: relative; background-color: #000; overflow: hidden;">');
+                    // Tạo thumbnail container
+                    const thumbnail = $('<div class="video-thumbnail position-relative">').css({
+                        'height': '150px',
+                        'overflow': 'hidden',
+                        'background-color': '#000'
+                    });
 
-                    // Tạo một phần tử video ẩn để lấy poster frame
-                    const thumbnailVideo = $('<video muted style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.7;">');
-                    thumbnailVideo.attr('src', video.url);
+                    // Tạo thumbnail từ video
+                    const videoElement = $('<video muted>').attr({
+                        'src': video.url,
+                        'preload': 'metadata'
+                    }).css({
+                        'width': '100%',
+                        'height': '100%',
+                        'object-fit': 'cover'
+                    });
 
-                    // Thêm overlay với icon play
-                    const playOverlay = $('<div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center;">');
-                    playOverlay.html('<i class="bi bi-play-circle" style="font-size: 2.5rem; color: #fff; text-shadow: 0 0 10px rgba(0,0,0,0.5);"></i>');
+                    // Overlay nút play
+                    const playOverlay = $('<div class="play-overlay">').css({
+                        'position': 'absolute',
+                        'top': 0,
+                        'left': 0,
+                        'right': 0,
+                        'bottom': 0,
+                        'display': 'flex',
+                        'align-items': 'center',
+                        'justify-content': 'center'
+                    });
 
-                    thumbnail.append(thumbnailVideo);
+                    // Nút play
+                    const playButton = $('<div class="play-button">').css({
+                        'width': '50px',
+                        'height': '50px',
+                        'border-radius': '50%',
+                        'background-color': 'rgba(0,0,0,0.5)',
+                        'display': 'flex',
+                        'align-items': 'center',
+                        'justify-content': 'center'
+                    });
+
+                    // Icon play
+                    playButton.append('<i class="bi bi-play-fill" style="font-size: 2rem; color: #fff;"></i>');
+                    playOverlay.append(playButton);
+
+                    // Badge hiển thị thời lượng video
+                    const durationBadge = $('<span class="badge bg-dark position-absolute bottom-0 end-0 m-2">');
+                    durationBadge.html('<i class="bi bi-film me-1"></i>Video');
+
+                    // Thêm các phần tử vào thumbnail
+                    thumbnail.append(videoElement);
                     thumbnail.append(playOverlay);
+                    thumbnail.append(durationBadge);
 
-                    // Tạo preview khi click vào thumbnail
-                    thumbnail.on('click', function (e) {
+                    // Xử lý video không load được
+                    videoElement.on('error', function () {
+                        $(this).hide();
+                        thumbnail.append('<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-film" style="font-size: 3rem; color: #fff;"></i></div>');
+                    });
+
+                    // Load thời lượng video
+                    videoElement.on('loadedmetadata', function () {
+                        if (this.duration) {
+                            const duration = Math.round(this.duration);
+                            const minutes = Math.floor(duration / 60);
+                            const seconds = duration % 60;
+                            durationBadge.text(`${minutes}:${seconds < 10 ? '0' + seconds : seconds}`);
+                        }
+                    });
+
+                    // Tên video bên dưới
+                    const cardBody = $('<div class="card-body p-2">');
+                    const videoName = $('<p class="card-text mb-0 text-truncate">').text(video.name).attr('title', video.name);
+                    cardBody.append(videoName);
+
+                    // Thêm sự kiện click
+                    playOverlay.on('click', function (e) {
                         e.stopPropagation();
                         previewVideo(video.url);
                     });
 
-                    card.on('click', function () {
-                        toggleVideoSelection(video.url, this);
-                    });
-
-                    // Load video metadata để hiển thị khi có thể
-                    thumbnailVideo.on('loadeddata', function () {
-                        // Seek đến 25% video để lấy frame đại diện
-                        try {
-                            const duration = this.duration;
-                            if (duration && isFinite(duration)) {
-                                this.currentTime = duration * 0.25;
-                            }
-                        } catch (e) {
-                            console.warn('Cannot set currentTime for video thumbnail', e);
+                    card.on('click', function (e) {
+                        if (!$(e.target).closest('.play-overlay').length) {
+                            toggleVideoSelection(video.url, this);
                         }
                     });
 
-                    const cardBody = $('<div class="card-body text-center p-2">').text(video.name);
-
+                    // Xây dựng card hoàn chỉnh
                     card.append(thumbnail);
                     card.append(cardBody);
                     colDiv.append(card);
                     $('#contentVideoList').append(colDiv);
-
-                    // Kiểm tra nếu video đã được chọn trước đó
-                    if (fileManagerSelectedVideos.includes(video.url)) {
-                        card.addClass('selected');
-                    }
                 });
             } else {
-                $('#contentVideoList').html('<div class="col-12 text-center">Không tìm thấy video trong thư mục này</div>');
+                $('#contentVideoList').html('<div class="col-12 text-center py-3">Không có video nào trong thư mục này</div>');
             }
         }
     }
@@ -804,6 +893,11 @@ $(document).ready(function () {
         // Nếu chưa tải dữ liệu video, thực hiện tải
         if (Object.keys(contentVideosTree).length === 0) {
             loadVideosData();
+        } else {
+            // Nếu đã có dữ liệu, chỉ cần hiển thị lại
+            currentContentVideoFolder = null;
+            contentVideoFolderStack = [];
+            loadContentVideoList();
         }
     });
 
@@ -893,4 +987,17 @@ $(document).ready(function () {
         }
         loadContentImageList();
     }
+
+    // Thêm sự kiện click trực tiếp để mở modal
+    $(document).on('click', '#contentImageSelectorModal', function (e) {
+        // Chỉ xử lý khi click vào chính modal container, không phải nội dung bên trong
+        if (e.target.id === 'contentImageSelectorModal') {
+            showContentImageSelector();
+        }
+    });
+
+    // Hoặc bạn có thể sử dụng method .modal() của Bootstrap trực tiếp
+    $(document).on('click', '#btnOpenImageSelector', function () {
+        showContentImageSelector();
+    });
 });

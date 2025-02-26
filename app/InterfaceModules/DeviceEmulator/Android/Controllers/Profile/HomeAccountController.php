@@ -23,7 +23,6 @@ use HoangquyIT\ModelFacebook\Android\Message\MessageControler;
 use App\InterfaceModules\DeviceEmulator\Android\Controllers\DeviceEmulatorController;
 
 
-
 class HomeAccountController extends Controller
 {
     protected $accountRepository;

@@ -12,7 +12,6 @@
 <link rel="stylesheet" href="{{ asset('modules/content_manager/css/ContentManager.css') }}">
 
 
-
 @endsection
 
 @section('content')
@@ -144,79 +143,79 @@
     </div>
 </div>
 
-<div class="modal fade" id="imageOptionModal" tabindex="-1" role="dialog" aria-labelledby="imageOptionModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content wrapper">
-            <div class="modal-header">
-                <h5 class="modal-title" id="imageOptionModalLabel">Chọn nguồn hình ảnh</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Đóng">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body text-center">
-                <button type="button" class="btn btn-primary" id="btnUploadFromLocal">Tải ảnh từ máy</button>
-                <button type="button" class="btn btn-secondary" id="btnSelectFromFileManager">Chọn ảnh từ FileManager</button>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+    <div class="modal fade" id="imageOptionModal" tabindex="-1" role="dialog" aria-labelledby="imageOptionModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content wrapper">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageOptionModalLabel">Chọn nguồn hình ảnh</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Đóng">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body text-center">
+                    <button type="button" class="btn btn-primary" id="btnUploadFromLocal">Tải ảnh từ máy</button>
+                    <button type="button" class="btn btn-secondary" id="btnSelectFromFileManager">Chọn ảnh từ FileManager</button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Modal chọn hình ảnh từ FileManager (cho chọn nhiều hình) -->
-<!-- Cập nhật modal chọn hình ảnh từ FileManager để hỗ trợ cả video -->
-<div class="modal fade" id="contentImageSelectorModal" tabindex="-1" role="dialog" aria-labelledby="contentImageSelectorLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document" style="max-width:66.67%;">
-        <div class="modal-content wrapper">
-            <div class="modal-header">
-                <!-- Nút Back để quay lại danh sách folder -->
-                <button id="backContentMediaButton" type="button" class="btn btn-secondary mr-2" style="display:none;" onclick="goBackContentMedia()">Back</button>
-                <h5 class="modal-title" id="contentImageSelectorLabel">Chọn media</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Đóng">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
+    <!-- Modal chọn hình ảnh từ FileManager (cho chọn nhiều hình) -->
+    <!-- Cập nhật modal chọn hình ảnh từ FileManager để hỗ trợ cả video -->
+    <div class="modal fade" id="contentImageSelectorModal" tabindex="-1" role="dialog" aria-labelledby="contentImageSelectorLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document" style="max-width:66.67%;">
+            <div class="modal-content wrapper">
+                <div class="modal-header">
+                    <!-- Nút Back để quay lại danh sách folder -->
+                    <button id="backContentMediaButton" type="button" class="btn btn-secondary mr-2" style="display:none;" onclick="goBackContentMedia()">Back</button>
+                    <h5 class="modal-title" id="contentImageSelectorLabel">Chọn media</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Đóng">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
 
-            <!-- Thêm tab cho Images và Videos -->
-            <ul class="nav nav-tabs" id="mediaTypeTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <a class="nav-link active" id="images-tab" data-bs-toggle="tab" href="#images-content" role="tab">Images</a>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <a class="nav-link" id="videos-tab" data-bs-toggle="tab" href="#videos-content" role="tab">Videos</a>
-                </li>
-            </ul>
+                <!-- Thêm tab cho Images và Videos -->
+                <ul class="nav nav-tabs" id="mediaTypeTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link active" id="images-tab" data-bs-toggle="tab" href="#images-content" role="tab">Images</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="videos-tab" data-bs-toggle="tab" href="#videos-content" role="tab">Videos</a>
+                    </li>
+                </ul>
 
-            <div class="tab-content" id="mediaTypeTabsContent">
-                <!-- Tab Images -->
-                <div class="tab-pane fade show active" id="images-content" role="tabpanel">
-                    <div class="modal-body">
-                        <p>Thư mục: <span id="currentContentImageFolder">root</span></p>
-                        <div id="contentImageList" class="row">
-                            <!-- Danh sách folder/hình sẽ được load tại đây -->
+                <div class="tab-content" id="mediaTypeTabsContent">
+                    <!-- Tab Images -->
+                    <div class="tab-pane fade show active" id="images-content" role="tabpanel">
+                        <div class="modal-body">
+                            <p>Thư mục: <span id="currentContentImageFolder">root</span></p>
+                            <div id="contentImageList" class="row">
+                                <!-- Danh sách folder/hình sẽ được load tại đây -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab Videos -->
+                    <div class="tab-pane fade" id="videos-content" role="tabpanel">
+                        <div class="modal-body">
+                            <p>Thư mục: <span id="currentContentVideoFolder">root</span></p>
+                            <div id="contentVideoList" class="row">
+                                <!-- Danh sách folder/video sẽ được load tại đây -->
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Tab Videos -->
-                <div class="tab-pane fade" id="videos-content" role="tabpanel">
-                    <div class="modal-body">
-                        <p>Thư mục: <span id="currentContentVideoFolder">root</span></p>
-                        <div id="contentVideoList" class="row">
-                            <!-- Danh sách folder/video sẽ được load tại đây -->
-                        </div>
-                    </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" id="btnConfirmFileManagerSelection">Xác nhận chọn media</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                 </div>
             </div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn btn-success" id="btnConfirmFileManagerSelection">Xác nhận chọn media</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-            </div>
         </div>
-    </div>
-</div>>
+    </div>>
 
 @endsection
 

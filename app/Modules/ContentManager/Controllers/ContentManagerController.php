@@ -124,7 +124,6 @@ class ContentManagerController extends Controller
         return response()->json($content);
     }
 
-
     public function update(Request $request, $id)
     {
         $content = $this->contentManagerRepository->findById($id);

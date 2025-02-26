@@ -59,7 +59,6 @@ class ImageVideoManagerController extends Controller
             'uid' => 'required'
         ]);
 
-       
 
 
         // Nơi lưu trữ output của hình ảnh và video
@@ -83,6 +82,7 @@ class ImageVideoManagerController extends Controller
         $extractFrames = $request->boolean('extract_frames');
         //
         $downloader = new FbMediaDownloader();
+        
         $downloader->set_url($url);
         $response = $downloader->generate_data();
         //var_dump($datas);

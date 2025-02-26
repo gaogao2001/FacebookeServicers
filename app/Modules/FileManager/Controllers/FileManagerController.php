@@ -217,7 +217,6 @@ class FileManagerController extends Controller
     {
         // Sử dụng thư mục public chứa hình ảnh làm base
         $basePath = public_path('FileData/Images');
-
         $tree = [];
 
         if (is_dir($basePath)) {

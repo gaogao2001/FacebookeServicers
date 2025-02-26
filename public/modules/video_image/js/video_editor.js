@@ -627,6 +627,7 @@ $(document).ready(function () {
             }
         });
     }
+    
     function loadContentVideoList() {
         $('#contentVideoList').empty();
         if (currentContentVideoFolder === null) {
