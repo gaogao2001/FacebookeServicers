@@ -79,6 +79,8 @@ class LoginController extends Controller
                 'menu' => $menus, // Lưu các menu được phép truy cập
             ]]);
 
+            session(['lastActivityTime' => time()]);
+
             $defaultRedirect = '/login';
 
             if (!empty($menus)) {

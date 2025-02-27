@@ -1,0 +1,25 @@
+{
+    "version": "1.0",
+    "appName": "Facebook Service",
+    "lastUpdated": "2025-02-27",
+    "pages": [
+        {
+            "id": "dashboard",
+            "title": "Trang Điều Khiển",
+            "description": "Hướng dẫn sử dụng trang điều khiển chính",
+            "icon": "fa-chart-line"
+        },
+        {
+            "id": "user-management",
+            "title": "Quản Lý Người Dùng",
+            "description": "Hướng dẫn quản lý tài khoản người dùng",
+            "icon": "fa-users"
+        },
+        {
+            "id": "facebook-modules",
+            "title": "Quản Lý Facebook",
+            "description": "Hướng dẫn sử dụng các tính năng quản lý Facebook",
+            "icon": "fa-facebook"
+        }
+    ]
+}

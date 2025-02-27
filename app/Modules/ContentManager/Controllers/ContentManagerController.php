@@ -53,13 +53,13 @@ class ContentManagerController extends Controller
 
     public function store(Request $request)
     {
+
         try {
             $validatedData = $request->validate([
                 'title' => 'required|string|max:255',
                 'content' => 'required|string',
                 'post_platform'  => 'required|string',
-                'img' => 'nullable',
-                'img.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+                'media.*' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,mp4,mov,avi,wmv|max:51200',
                 'price' => 'nullable|numeric',
                 'latitude' => 'nullable|numeric',
                 'longitude' => 'nullable|numeric',
@@ -80,7 +80,27 @@ class ContentManagerController extends Controller
             'longitude' => $validatedData['longitude'] ?? null,
         ];
 
+
         $imgs = [];
+        $videos = [];
+
+        if ($request->hasFile('media')) {
+            foreach ($request->file('media') as $file) {
+                $extension = strtolower($file->getClientOriginalExtension());
+                $fileName = time() . '_' . uniqid() . '.' . $extension;
+
+                // Phân loại theo định dạng file
+                $isVideo = in_array($extension, ['mp4', 'mov', 'avi', 'wmv']);
+
+                if ($isVideo) {
+                    $path = $file->storeAs('ContentVideo', $fileName, 'public');
+                    $videos[] = '/storage/ContentVideo/' . $fileName;
+                } else {
+                    $path = $file->storeAs('ContentImage', $fileName, 'public');
+                    $imgs[] = '/storage/ContentImage/' . $fileName;
+                }
+            }
+        }
 
         // Xử lý hình ảnh từ input file (tải từ máy)
         if ($request->hasFile('img')) {
@@ -91,6 +111,15 @@ class ContentManagerController extends Controller
                 $imgs[] = '/storage/ContentImage/' . $fileName;
             }
         }
+
+        if ($request->hasFile('videos')) {
+            foreach ($request->file('videos') as $video) {
+                $fileName = time() . '_' . uniqid() . '.' . $video->getClientOriginalExtension();
+                $path = $video->storeAs('ContentVideo', $fileName, 'public');
+                $videos[] = '/storage/ContentVideo/' . $fileName;
+            }
+        }
+
         if ($request->filled('existing_imgs')) {
             $existingImgs = json_decode($request->input('existing_imgs'), true);
             if (is_array($existingImgs)) {
@@ -103,7 +132,21 @@ class ContentManagerController extends Controller
             }
         }
 
+        if ($request->filled('existing_videos')) {
+            $existingVideos = json_decode($request->input('existing_videos'), true);
+            if (is_array($existingVideos)) {
+                // Chuyển đổi đường dẫn nếu cần
+                foreach ($existingVideos as &$video) {
+                    $video = str_replace('http://192.168.1.6/FileData/Videos/', '/var/www/FacebookService/public/FileData/Videos/', $video);
+                }
+                // Gộp video từ thiết bị và video từ FileManager
+                $videos = array_merge($videos, $existingVideos);
+            }
+        }
+
+
         $data['imgs'] = json_encode($imgs);
+        $data['videos'] = json_encode($videos);
 
         // Debug dữ liệu (Sau khi kiểm tra, hãy xóa dd())
 
@@ -144,16 +187,14 @@ class ContentManagerController extends Controller
                 'title'           => 'required|string|max:255',
                 'content'         => 'required|string',
                 'post_platform'   => 'required|string',
-                'img'             => 'nullable|array',
-                'img.*'           => 'image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+                'media.*'         => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,mp4,mov,avi,wmv|max:51200',
                 'existing_imgs'   => 'nullable|array',
                 'price'           => 'nullable|numeric',
                 'latitude'        => 'nullable|numeric',
                 'longitude'       => 'nullable|numeric',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::error('Validation failed:', $e->errors());
-            return response()->json(['errors' => $e->errors()], 200);
+            // Phần code đã có...
         }
 
         // Lấy danh sách hình ảnh đang lưu trong database (nếu có)
@@ -184,6 +225,36 @@ class ContentManagerController extends Controller
             }
         }
 
+        $videos = [];
+        if ($request->filled('existing_videos')) {
+            $existingVideos = json_decode($request->input('existing_videos'), true);
+            if (is_array($existingVideos)) {
+                // Chuyển đổi đường dẫn nếu cần
+                foreach ($existingVideos as &$video) {
+                    $video = str_replace('http://192.168.1.6/FileData/Videos/', '/var/www/FacebookService/public/FileData/Videos/', $video);
+                }
+                $videos = $existingVideos;
+            }
+        }
+
+        if ($request->hasFile('media')) {
+            foreach ($request->file('media') as $file) {
+                $extension = strtolower($file->getClientOriginalExtension());
+                $fileName = time() . '_' . uniqid() . '.' . $extension;
+
+                // Phân loại theo định dạng file
+                $isVideo = in_array($extension, ['mp4', 'mov', 'avi', 'wmv']);
+
+                if ($isVideo) {
+                    $path = $file->storeAs('ContentVideo', $fileName, 'public');
+                    $videos[] = '/storage/ContentVideo/' . $fileName;
+                } else {
+                    $path = $file->storeAs('ContentImage', $fileName, 'public');
+                    $existingImgs[] = '/storage/ContentImage/' . $fileName;
+                }
+            }
+        }
+
         // Chuẩn bị dữ liệu cập nhật
         $data = [
             'title'         => $validatedData['title'],
@@ -191,6 +262,7 @@ class ContentManagerController extends Controller
             'post_platform' => $validatedData['post_platform'],
             'update_time'   => now()->format('d/m/Y H:i:s'),
             'imgs'          => json_encode($existingImgs), // Lưu dưới dạng JSON
+            'videos'        => json_encode($videos),
             'price'         => $validatedData['price'] ?? 0,
             'latitude'      => $validatedData['latitude'] ?? null,
             'longitude'     => $validatedData['longitude'] ?? null,

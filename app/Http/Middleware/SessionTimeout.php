@@ -13,17 +13,26 @@ class SessionTimeout
 
     public function handle(Request $request, Closure $next)
     {
-        $lastActivity = Session::get('lastActivityTime');
-        $currentTime = time();
-        
-        if ($lastActivity && ($currentTime - $lastActivity) > $this->timeout) {
-            Session::forget('account');
-            Session::forget('lastActivityTime');
-            return redirect('/login')->withErrors('Phiên làm việc của bạn đã hết hạn. Vui lòng đăng nhập lại.');
-        }
+        // Chỉ kiểm tra timeout khi người dùng đã đăng nhập
+        if (Session::has('account')) {
+            $lastActivity = Session::get('lastActivityTime');
+            $currentTime = time();
 
-        Session::put('lastActivityTime', $currentTime);
-       
+            // Nếu chưa có lastActivityTime, khởi tạo nó
+            if (!$lastActivity) {
+                Session::put('lastActivityTime', $currentTime);
+            }
+            // Nếu đã có và vượt quá thời gian timeout
+            else if (($currentTime - $lastActivity) > $this->timeout) {
+                Session::forget('account');
+                Session::forget('lastActivityTime');
+                return redirect('/login')->withErrors('Phiên làm việc của bạn đã hết hạn. Vui lòng đăng nhập lại.');
+            }
+            // Cập nhật thời gian hoạt động mới nhất
+            else {
+                Session::put('lastActivityTime', $currentTime);
+            }
+        }
 
         return $next($request);
     }

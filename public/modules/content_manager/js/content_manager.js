@@ -2,6 +2,11 @@
 $(document).ready(function () {
     const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
+
+    let selectedImages = [];
+    let existingImages = [];
+    let selectedVideos = [];
+
     $.ajaxSetup({
         headers: {
             'X-CSRF-TOKEN': csrfToken
@@ -48,8 +53,6 @@ $(document).ready(function () {
     });
 
     // Khai báo mảng lưu trữ các file hình ảnh được chọn
-    let selectedImages = [];
-    let existingImages = [];
 
     // Hàm hiển thị thông báo sử dụng SweetAlert2
     function showAlert(type, message) {
@@ -111,10 +114,12 @@ $(document).ready(function () {
     });
 
     function loadContents() {
+        showLoading();  // Hiển thị loading trước khi gọi Ajax
         $.ajax({
             url: '/content-manager',
             method: 'GET',
             success: function (contents) {
+                hideLoading(); // Ẩn loading khi thành công
                 const contentList = $('#contentList');
                 contentList.empty();
 
@@ -149,6 +154,7 @@ $(document).ready(function () {
                 });
             },
             error: function (xhr) {
+                hideLoading(); // Ẩn loading khi xảy ra lỗi
                 console.error('Lỗi khi tải danh sách nội dung:', xhr.responseText);
                 showAlert('error', 'Đã xảy ra lỗi khi tải danh sách nội dung.');
             }
@@ -182,18 +188,30 @@ $(document).ready(function () {
 
         // Thêm các hình ảnh được chọn vào formData
         selectedImages.forEach((file) => {
-            formData.append('img[]', file);
+            if (file instanceof File) {
+                formData.append('media[]', file);
+                console.log('Adding image to media[]:', file.name); // Debug
+            }
+        });
+
+        // Thêm video dạng File vào media[]
+        selectedVideos.forEach((video) => {
+            if (video instanceof File) {
+                formData.append('media[]', video);
+                console.log('Adding video to media[]:', video.name); // Debug
+            }
         });
 
         // Gửi danh sách hình ảnh hiện có (sau khi đã xoá những ảnh người dùng muốn xoá)
         formData.append('existing_imgs', JSON.stringify(existingImages));
 
-        formData.append('existing_videos', JSON.stringify(selectedVideos));
+        formData.append('existing_videos', JSON.stringify(selectedVideos.filter(v => typeof v === 'string')));
 
         if (contentId) {
             formData.append('_method', 'PUT');
         }
 
+        showLoading();
         $.ajax({
             url: url,
             method: method,
@@ -204,6 +222,7 @@ $(document).ready(function () {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },
             success: function (response) {
+                hideLoading();
                 showAlert('success', contentId ? 'Cập nhật nội dung thành công!' : 'Thêm mới nội dung thành công!');
                 loadContents();
                 $('#editContentForm')[0].reset();
@@ -211,13 +230,16 @@ $(document).ready(function () {
                 $('#contentId').val('');
                 $('#currentImages').empty();
                 $('#previewImages').empty();
+                $('#previewVideos').empty();
                 selectedImages = [];
                 existingImages = [];
+                selectedVideos = [];
                 // Reset coordinates
                 $('#latitude').val('');
                 $('#longitude').val('');
             },
             error: function (xhr) {
+                hideLoading();
                 if (xhr.status === 422) {
                     const errors = xhr.responseJSON.errors;
                     let errorMessages = '';
@@ -234,10 +256,12 @@ $(document).ready(function () {
     });
 
     function editContent(id) {
+        showLoading();
         $.ajax({
             url: `/content-manager/${id}`,
             method: 'GET',
             success: function (content) {
+                hideLoading();
                 $('#contentTitle').val(content.title);
                 tinymce.get('contentBody').setContent(content.content);
                 $('#contentId').val(content._id.$oid);
@@ -285,6 +309,64 @@ $(document).ready(function () {
                 } else {
                     $('#currentImages').hide();
                 }
+                // Tìm hàm editContent và thêm đoạn code này sau phần xử lý images
+
+                // Hiển thị video đã có
+                if (content.videos) {
+                    $('#previewVideos').empty();
+                    const existingVideos = JSON.parse(content.videos);
+                    selectedVideos = existingVideos;
+
+                    existingVideos.forEach(function (videoUrl) {
+                        // Chuyển đổi đường dẫn nếu cần
+                        const publicPathPrefix = "/var/www/FacebookService/public/";
+                        let displayUrl = videoUrl;
+                        if (videoUrl.indexOf(publicPathPrefix) === 0) {
+                            displayUrl = videoUrl.replace(publicPathPrefix, '/');
+                        }
+
+                        const videoName = displayUrl.split('/').pop();
+                        const previewDiv = $(`
+                           <div class="preview-video">
+                            <div class="video-thumbnail">
+                                <video muted preload="metadata" style="width: 100%; height: 100%; object-fit: cover;">
+                                    <source src="${displayUrl}" type="video/mp4">
+                                </video>
+                                <div class="play-overlay">
+                                    <div class="play-button">
+                                        <div class="triangle-play"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="video-name text-center">${videoName}</div>
+                            <button type="button" class="remove-video">&times;</button>
+                        </div>
+                            `);
+
+                        // Đặt currentTime để tạo thumbnail
+                        const videoElement = previewDiv.find('video')[0];
+                        videoElement.onloadedmetadata = function () {
+                            this.currentTime = 0.5; // Lấy frame ở giây thứ 0.5
+                        };
+
+                        previewDiv.find('.video-thumbnail').click(function () {
+                            previewVideo(displayUrl);
+                        });
+
+                        previewDiv.find('.remove-video').click(function () {
+                            const index = selectedVideos.indexOf(videoUrl);
+                            if (index > -1) {
+                                selectedVideos.splice(index, 1);
+                            }
+                            previewDiv.remove();
+                        });
+
+                        $('#previewVideos').append(previewDiv);
+                    });
+                } else {
+                    $('#previewVideos').empty();
+                    selectedVideos = [];
+                }
 
                 // Set map coordinates if available
                 if (content.latitude && content.longitude) {
@@ -297,6 +379,7 @@ $(document).ready(function () {
                 }
             },
             error: function (xhr) {
+                hideLoading();
                 console.error('Lỗi khi lấy nội dung cần sửa:', xhr.responseText);
                 showAlert('error', 'Đã xảy ra lỗi khi lấy nội dung cần sửa.');
             }
@@ -308,40 +391,118 @@ $(document).ready(function () {
 
         files.forEach((file) => {
             const fileName = file.name;
+            const fileType = file.type;
 
-            // Lấy danh sách tên hình ảnh hiện có
-            const existingImageNames = existingImages.map(url => url.substring(url.lastIndexOf('/') + 1));
-            const selectedImageNames = selectedImages.map(f => f.name);
+            // Phân loại file theo MIME type
+            if (fileType.startsWith('image/')) {
+                // Xử lý hình ảnh
 
-            // Kiểm tra trùng tên trong existingImages và selectedImages
-            if (existingImageNames.includes(fileName) || selectedImageNames.includes(fileName)) {
-                showAlert('error', `Hình ảnh "${fileName}" đã tồn tại.`);
-                return; // Bỏ qua hình ảnh trùng
-            }
+                // Lấy danh sách tên hình ảnh hiện có
+                const existingImageNames = existingImages.map(url => url.substring(url.lastIndexOf('/') + 1));
+                const selectedImageNames = selectedImages.map(f => f.name);
 
-            selectedImages.push(file);
+                // Kiểm tra trùng tên trong existingImages và selectedImages
+                if (existingImageNames.includes(fileName) || selectedImageNames.includes(fileName)) {
+                    showAlert('error', `Hình ảnh "${fileName}" đã tồn tại.`);
+                    return; // Bỏ qua hình ảnh trùng
+                }
 
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const imgElement = $(`
-                    <div class="preview-image">
-                        <img src="${e.target.result}" alt="Image">
-                        <button type="button" class="remove-image">&times;</button>
-                    </div>
-                `);
+                selectedImages.push(file);
 
-                // Xử lý sự kiện xoá hình ảnh
-                imgElement.find('.remove-image').click(function () {
-                    const index = selectedImages.indexOf(file);
-                    if (index > -1) {
-                        selectedImages.splice(index, 1);
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const imgElement = $(`
+                        <div class="preview-image">
+                            <img src="${e.target.result}" alt="Image">
+                            <button type="button" class="remove-image">&times;</button>
+                        </div>
+                    `);
+
+                    // Xử lý sự kiện xoá hình ảnh
+                    imgElement.find('.remove-image').click(function () {
+                        const index = selectedImages.indexOf(file);
+                        if (index > -1) {
+                            selectedImages.splice(index, 1);
+                        }
+                        imgElement.remove();
+                    });
+
+                    $('#previewImages').append(imgElement);
+                };
+                reader.readAsDataURL(file);
+
+            } else if (fileType.startsWith('video/')) {
+                // Xử lý video
+
+                // Kiểm tra xem video đã tồn tại chưa
+                const existingVideoNames = selectedVideos.map(v => {
+                    if (typeof v === 'string') {
+                        return v.split('/').pop();
+                    } else if (v instanceof File) {
+                        return v.name;
                     }
-                    imgElement.remove();
+                    return '';
                 });
 
-                $('#previewImages').append(imgElement);
-            };
-            reader.readAsDataURL(file);
+                if (existingVideoNames.includes(fileName)) {
+                    showAlert('error', `Video "${fileName}" đã tồn tại.`);
+                    return;
+                }
+
+                // Thêm vào danh sách video đã chọn
+                selectedVideos.push(file);
+
+                const videoURL = URL.createObjectURL(file);
+                // Tạo phần tử xem trước
+                // Tạo phần tử xem trước với thumbnail từ video
+                const previewDiv = $(`
+                <div class="preview-video">
+                <div class="video-thumbnail">
+                    <video muted preload="metadata" style="width: 100%; height: 100%; object-fit: cover;">
+                        <source src="${videoURL}" type="${fileType}">
+                    </video>
+                    <div class="play-overlay">
+                        <div class="play-button">
+                            <div class="triangle-play"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="video-name text-center">${fileName}</div>
+                <button type="button" class="remove-video">&times;</button>
+            </div>
+            `);
+
+                const videoElement = previewDiv.find('video')[0];
+                // Đặt currentTime để tạo thumbnail
+                videoElement.onloadedmetadata = function () {
+                    this.currentTime = 0.5; // Lấy frame ở giây thứ 0.5
+                };
+
+                // Xem trước video khi click
+                previewDiv.find('.video-thumbnail').click(function () {
+                    const objectUrl = URL.createObjectURL(file);
+                    previewVideo(objectUrl);
+                    // Giải phóng URL khi modal đóng
+                    $('#tempVideoPreviewModal').on('hidden.bs.modal', function () {
+                        URL.revokeObjectURL(objectUrl);
+                    });
+                });
+
+                previewDiv.find('.video-thumbnail').click(function () {
+                    previewVideo(videoURL);
+                });
+
+                // Xóa video khỏi danh sách
+                previewDiv.find('.remove-video').click(function () {
+                    const index = selectedVideos.indexOf(file);
+                    if (index > -1) {
+                        selectedVideos.splice(index, 1);
+                    }
+                    previewDiv.remove();
+                });
+
+                $('#previewVideos').append(previewDiv);
+            }
         });
 
         $(this).val('');
@@ -358,6 +519,7 @@ $(document).ready(function () {
             cancelButtonText: 'Hủy'
         }).then((result) => {
             if (result.isConfirmed) {
+                showLoading();
                 $.ajax({
                     url: `/content-manager/${id}`,
                     method: 'DELETE',
@@ -365,10 +527,12 @@ $(document).ready(function () {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function (response) {
+                        hideLoading();
                         showAlert('success', 'Xóa nội dung thành công!');
                         loadContents();
                     },
                     error: function (xhr) {
+                        hideLoading();
                         console.error('Lỗi khi xóa nội dung:', xhr.responseText);
                         showAlert('error', 'Đã xảy ra lỗi khi xóa nội dung.');
                     }
@@ -459,7 +623,7 @@ $(document).ready(function () {
             $('#currentContentImageFolder').text('Danh sách thư mục');
             $('#backContentMediaButton').hide();
             const folders = Object.keys(contentImagesTree);
-            
+
             if (folders.length) {
                 folders.forEach(function (folderKey) {
                     let folderCard = $(`
@@ -487,7 +651,7 @@ $(document).ready(function () {
             $('#currentContentImageFolder').text(currentContentImageFolder);
             $('#backContentMediaButton').show();
             const images = contentImagesTree[currentContentImageFolder] || [];
-            
+
             if (images.length) {
                 images.forEach(function (image) {
                     let cardContainer = $(`
@@ -556,12 +720,31 @@ $(document).ready(function () {
         fileManagerSelectedImages.forEach(function (url) {
             if (!existingImages.includes(url)) {
                 existingImages.push(url);
+                const videoName = url.split('/').pop();
                 const previewDiv = $(`
-                    <div class="preview-image">
-                        <img src="${url}" alt="Image">
-                        <button type="button" class="remove-image">&times;</button>
+                <div class="preview-video">
+                    <div class="video-thumbnail" style="height: 120px; position: relative; overflow: hidden; border-radius: 4px; cursor: pointer;">
+                        <video muted preload="metadata" style="width: 100%; height: 100%; object-fit: cover;">
+                            <source src="${url}" type="video/mp4">
+                        </video>
+                        <div class="play-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-play-circle" style="font-size: 2.5rem; color: white; opacity: 0.8;"></i>
+                        </div>
                     </div>
+                    <div class="video-name text-center">${videoName}</div>
+                    <button type="button" class="remove-video">&times;</button>
+                </div>
                 `);
+
+                // Đảm bảo video được tạo thumbnail
+                const videoElement = previewDiv.find('video')[0];
+                videoElement.onloadedmetadata = function () {
+                    this.currentTime = 0.5; // Lấy frame ở giây thứ 0.5
+                };
+
+                previewDiv.find('.video-thumbnail').click(function () {
+                    previewVideo(url);
+                });
                 previewDiv.find('.remove-image').click(function () {
                     const idx = existingImages.indexOf(url);
                     if (idx > -1) {
@@ -597,7 +780,7 @@ $(document).ready(function () {
     let currentContentVideoFolder = null;
     let contentVideoFolderStack = [];
     let fileManagerSelectedVideos = [];
-    let selectedVideos = [];
+
 
     function loadVideosData() {
         $.ajax({
@@ -720,7 +903,7 @@ $(document).ready(function () {
                     });
 
                     // Icon play
-                    playButton.append('<i class="bi bi-play-fill" style="font-size: 2rem; color: #fff;"></i>');
+                    playButton.append('<div class="triangle-play"></div>');
                     playOverlay.append(playButton);
 
                     // Badge hiển thị thời lượng video
@@ -938,14 +1121,21 @@ $(document).ready(function () {
 
                     const videoName = url.split('/').pop();
                     const previewDiv = $(`
-                    <div class="preview-video">
-                        <div class="video-thumbnail" style="height: 120px; display: flex; align-items: center; justify-content: center; background-color: #000; cursor: pointer;">
-                            <i class="bi bi-play-circle" style="font-size: 3rem; color: #fff;"></i>
+                   <div class="preview-video">
+                        <div class="video-thumbnail">
+                            <video muted preload="metadata" style="width: 100%; height: 100%; object-fit: cover;">
+                                <source src="${url}" type="video/mp4">
+                            </video>
+                            <div class="play-overlay">
+                                <div class="play-button">
+                                    <div class="triangle-play"></div>
+                                </div>
+                            </div>
                         </div>
                         <div class="video-name text-center">${videoName}</div>
                         <button type="button" class="remove-video">&times;</button>
                     </div>
-                `);
+                    `);
 
                     previewDiv.find('.video-thumbnail').click(function () {
                         previewVideo(url);
@@ -1000,4 +1190,40 @@ $(document).ready(function () {
     $(document).on('click', '#btnOpenImageSelector', function () {
         showContentImageSelector();
     });
+
+    $('#btnUploadImageFromLocal').on('click', function () {
+        $('#imageOptionModal').modal('hide');
+        $('#contentImage').trigger('click');
+    });
+
+    $('#btnUploadVideoFromLocal').on('click', function () {
+        $('#imageOptionModal').modal('hide');
+        $('#contentVideo').trigger('click');
+    });
+
+    $('#btnSelectVideoFromFileManager').on('click', function () {
+        $('#imageOptionModal').modal('hide');
+        $('#contentImageSelectorModal').modal('show');
+        // Chuyển sang tab videos
+        $('#videos-tab').tab('show');
+    });
+
+    function showLoading() {
+        console.log("Hiển thị loading...");
+        if ($('#loadingOverlay').length === 0) {
+            $('body').append(`
+                    <div id="loadingOverlay">
+                        <div class="loader"></div>
+                    </div>
+                `);
+        }
+    }
+
+    function hideLoading() {
+        console.log("Ẩn loading...");
+        $('#loadingOverlay').remove();
+    }
+
+    
+
 });

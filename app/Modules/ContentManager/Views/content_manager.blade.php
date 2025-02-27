@@ -85,7 +85,7 @@
                                     <option value="ZaloGroup">Zalo Group</option>
                                     <option value="ChoTot">Chợ Tốt</option>
                                     <option value="Shopee">Shopee</option>
-                                    <option value="TiktokProfile">Tiktok Profile</option>
+                                    <option value="TiktokProsfile">Tiktok Profile</option>
                                     <option value="FacebookReels">Facebook reels</option>
                                 </select>
                                 <div id="locationPicker" style="display: none; margin-top: 10px;">
@@ -99,7 +99,7 @@
                             <div class="form-group">
                                 <label for="contentImage">Hình ảnh</label>
                                 <!-- Ẩn input file dùng cho tải ảnh từ máy -->
-                                <input type="file" class="form-control" id="contentImage" name="img[]" accept="image/*" multiple style="display: none;">
+                                <input type="file" class="form-control" id="contentImage" name="media[]" accept="image/*,video/*" multiple style="display: none;">
                                 <!-- Button chính để chọn hình ảnh (mở modal option) -->
                                 <button type="button" class="btn btn-info mt-2" id="btnSelectImageOption">Chọn hình ảnh</button>
                                 <div id="previewImages"></div>
@@ -143,79 +143,79 @@
     </div>
 </div>
 
-    <div class="modal fade" id="imageOptionModal" tabindex="-1" role="dialog" aria-labelledby="imageOptionModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content wrapper">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="imageOptionModalLabel">Chọn nguồn hình ảnh</h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Đóng">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body text-center">
-                    <button type="button" class="btn btn-primary" id="btnUploadFromLocal">Tải ảnh từ máy</button>
-                    <button type="button" class="btn btn-secondary" id="btnSelectFromFileManager">Chọn ảnh từ FileManager</button>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                </div>
+<div class="modal fade" id="imageOptionModal" tabindex="-1" role="dialog" aria-labelledby="imageOptionModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content wrapper">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageOptionModalLabel">Chọn nguồn hình ảnh</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Đóng">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <button type="button" class="btn btn-primary" id="btnUploadFromLocal">Tải ảnh từ máy</button>
+                <button type="button" class="btn btn-secondary" id="btnSelectFromFileManager">Chọn ảnh từ FileManager</button>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Modal chọn hình ảnh từ FileManager (cho chọn nhiều hình) -->
-    <!-- Cập nhật modal chọn hình ảnh từ FileManager để hỗ trợ cả video -->
-    <div class="modal fade" id="contentImageSelectorModal" tabindex="-1" role="dialog" aria-labelledby="contentImageSelectorLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document" style="max-width:66.67%;">
-            <div class="modal-content wrapper">
-                <div class="modal-header">
-                    <!-- Nút Back để quay lại danh sách folder -->
-                    <button id="backContentMediaButton" type="button" class="btn btn-secondary mr-2" style="display:none;" onclick="goBackContentMedia()">Back</button>
-                    <h5 class="modal-title" id="contentImageSelectorLabel">Chọn media</h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Đóng">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
+<!-- Modal chọn hình ảnh từ FileManager (cho chọn nhiều hình) -->
+<!-- Cập nhật modal chọn hình ảnh từ FileManager để hỗ trợ cả video -->
+<div class="modal fade" id="contentImageSelectorModal" tabindex="-1" role="dialog" aria-labelledby="contentImageSelectorLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document" style="max-width:66.67%;">
+        <div class="modal-content wrapper">
+            <div class="modal-header">
+                <!-- Nút Back để quay lại danh sách folder -->
+                <button id="backContentMediaButton" type="button" class="btn btn-secondary mr-2" style="display:none;" onclick="goBackContentMedia()">Back</button>
+                <h5 class="modal-title" id="contentImageSelectorLabel">Chọn media</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Đóng">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
 
-                <!-- Thêm tab cho Images và Videos -->
-                <ul class="nav nav-tabs" id="mediaTypeTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <a class="nav-link active" id="images-tab" data-bs-toggle="tab" href="#images-content" role="tab">Images</a>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="videos-tab" data-bs-toggle="tab" href="#videos-content" role="tab">Videos</a>
-                    </li>
-                </ul>
+            <!-- Thêm tab cho Images và Videos -->
+            <ul class="nav nav-tabs" id="mediaTypeTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active" id="images-tab" data-bs-toggle="tab" href="#images-content" role="tab">Images</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="videos-tab" data-bs-toggle="tab" href="#videos-content" role="tab">Videos</a>
+                </li>
+            </ul>
 
-                <div class="tab-content" id="mediaTypeTabsContent">
-                    <!-- Tab Images -->
-                    <div class="tab-pane fade show active" id="images-content" role="tabpanel">
-                        <div class="modal-body">
-                            <p>Thư mục: <span id="currentContentImageFolder">root</span></p>
-                            <div id="contentImageList" class="row">
-                                <!-- Danh sách folder/hình sẽ được load tại đây -->
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Tab Videos -->
-                    <div class="tab-pane fade" id="videos-content" role="tabpanel">
-                        <div class="modal-body">
-                            <p>Thư mục: <span id="currentContentVideoFolder">root</span></p>
-                            <div id="contentVideoList" class="row">
-                                <!-- Danh sách folder/video sẽ được load tại đây -->
-                            </div>
+            <div class="tab-content" id="mediaTypeTabsContent">
+                <!-- Tab Images -->
+                <div class="tab-pane fade show active" id="images-content" role="tabpanel">
+                    <div class="modal-body">
+                        <p>Thư mục: <span id="currentContentImageFolder">root</span></p>
+                        <div id="contentImageList" class="row">
+                            <!-- Danh sách folder/hình sẽ được load tại đây -->
                         </div>
                     </div>
                 </div>
 
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-success" id="btnConfirmFileManagerSelection">Xác nhận chọn media</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <!-- Tab Videos -->
+                <div class="tab-pane fade" id="videos-content" role="tabpanel">
+                    <div class="modal-body">
+                        <p>Thư mục: <span id="currentContentVideoFolder">root</span></p>
+                        <div id="contentVideoList" class="row">
+                            <!-- Danh sách folder/video sẽ được load tại đây -->
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" id="btnConfirmFileManagerSelection">Xác nhận chọn media</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
         </div>
-    </div>>
+    </div>
+</div>>
 
 @endsection
 

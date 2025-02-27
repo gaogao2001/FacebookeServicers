@@ -44,3 +44,14 @@ require_once base_path('app/Modules/Notification/routes.php');
 Route::get('/test', function (Request $request) {
   return view('test');
 });
+
+Route::get('/debug-session', function() {
+    return [
+        'lastActivityTime' => session('lastActivityTime'),
+        'lastActivityTime_formatted' => session('lastActivityTime') ? date('Y-m-d H:i:s', session('lastActivityTime')) : null,
+        'current_time' => time(),
+        'current_time_formatted' => date('Y-m-d H:i:s', time()),
+        'diff_seconds' => time() - session('lastActivityTime'),
+        'timeout_value' => app(\App\Http\Middleware\SessionTimeout::class)->timeout ?? 7200,
+    ];
+});

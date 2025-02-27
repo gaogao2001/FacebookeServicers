@@ -27,11 +27,10 @@ document.addEventListener('DOMContentLoaded', function () {
             dataType: 'json',
             data: { page: 1 },
             success: function (data) {
-                if (data.data) {
-                    // Lấy tổng số mục history
-                    const totalCount = data.data.length;
+                // Assuming the server response includes a 'total' property for total history count
+                if (data.total !== undefined) {
                     document.getElementById('facebookHistoryCountTitle').innerText =
-                        `Quản lí History (${totalCount})`;
+                        `Quản lí History (${data.total})`;
                 }
             },
             error: function (error) {

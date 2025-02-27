@@ -17,6 +17,9 @@
     <!-- seting_site -->
     <script src="{{ asset('assets/admin/js/setting_site.js') }}" defer></script>
     <link rel="stylesheet" href="{{ asset('assets/admin/css/setting_site.css') }}">
+
+    <link rel="stylesheet" href="{{ asset('modules/document/css/document.css') }}">
+    <script src="{{ asset('modules/document/js/document.js') }}"></script>
     <!-- Font Awesome -->
     <meta name="title" content="{{ $siteManager->meta_title ?? '' }}">
     <meta name="description" content="{{ $siteManager->meta_description ?? '' }}">
@@ -42,11 +45,41 @@
             @include('admin.partial.header')
             @yield('content')
         </div>
-        @include('admin.partial.todolist')
-        @include('admin.partial.setting_site')
+
+        <!-- Thay vì include riêng lẻ, bọc chúng trong một container -->
+        <div id="extraControls" style="display: none; position: fixed; bottom: 70px; right: 20px; z-index: 1100;">
+            <div>@include('admin.partial.todolist')</div>
+            <div>@include('admin.partial.setting_site')</div>
+            <div>@include('Document::documentation')</div>
+        </div>
+
+        <!-- Nút toggle chung -->
+        <button id="extraControlsToggle" class="btn btn-primary"
+            style="position: fixed; bottom: 20px; right: 20px; z-index: 1200;">
+            Menu
+        </button>
     </div>
     @include('admin.partial.script')
     @yield('footer.scripts')
+
+    <footer class="footer" style="padding: 0px !important;">
+        <!-- ...footer content... -->
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleBtn = document.getElementById('extraControlsToggle');
+            const extraControls = document.getElementById('extraControls');
+
+            toggleBtn.addEventListener('click', () => {
+                if (extraControls.style.display === 'none' || extraControls.style.display === '') {
+                    extraControls.style.display = 'block';
+                } else {
+                    extraControls.style.display = 'none';
+                }
+            });
+        });
+    </script>
 </body>
 
 <footer class="footer" style="padding: 0px !important;">

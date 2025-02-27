@@ -45,6 +45,7 @@ return [
         App\Modules\CronTab\Providers\CrontabServiceProvider::class,
         App\Modules\ExploitationNow\Providers\ExploitationNowServiceProvider::class,
         App\Modules\ImageVideo\Providers\VideoImageServiceProvider::class,
+        App\Modules\Document\Providers\DocumentServiceProvider::class,
 
         //feModule Providers
         App\InterfaceModules\DeviceEmulator\Android\Providers\AndroidServiceProvider::class
