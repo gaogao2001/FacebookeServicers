@@ -141,3 +141,37 @@ body {
 }
 
 /* to do list */
+
+/* Ẩn các nút toggle gốc */
+#toggle-panel,
+.sss-toggle-btn,
+.doc-toggle-btn {
+    display: none !important;
+}
+
+/* Đảm bảo phần tài liệu hiển thị đúng khi kích hoạt */
+#doc-sidebar.doc-visible {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    right: 0 !important;
+    /* Điều này giả định rằng sidebar hiển thị từ bên phải */
+    transform: translateX(0) !important;
+}
+
+/* Ẩn các nút toggle gốc */
+#toggle-panel,
+.sss-toggle-btn,
+.doc-toggle-btn {
+    display: none !important;
+}
+
+/* Đảm bảo phần tài liệu hiển thị đúng khi kích hoạt */
+#doc-sidebar.doc-visible {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    right: 0 !important;
+    /* Điều này giả định rằng sidebar hiển thị từ bên phải */
+    transform: translateX(0) !important;
+}

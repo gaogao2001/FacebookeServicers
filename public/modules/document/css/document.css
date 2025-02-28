@@ -19,6 +19,7 @@
 .doc-sidebar {
     position: fixed;
     right: -100%;
+    /* Ẩn sang phải */
     top: 0;
     width: 88%;
     height: 100%;
@@ -28,10 +29,15 @@
     z-index: 999;
     padding: 20px;
     overflow-y: auto;
+    display: none;
+    /* Thêm display: none mặc định */
 }
 
 .doc-sidebar.open {
     right: 0;
+    /* Hiển thị khi có class open */
+    display: block;
+    /* Đảm bảo hiển thị khi có class open */
 }
 
 .doc-close-btn {
@@ -133,4 +139,58 @@
 
 .doc-section {
     margin-bottom: 30px;
+}
+
+.wrapper {
+    background: transparent;
+    border: 2px solid rgba(225, 225, 225, .2);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 10px rgba(0, 0, 0, .2);
+    color: #FFFFFF;
+    padding: 1px 1px;
+}
+
+.modal .form-control {
+    background-color: #ffffff;
+    color: #000000;
+    border: 1px solid #ced4da;
+}
+
+/* Các CSS hiện tại */
+
+.doc-text {
+    margin-bottom: 20px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.doc-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.doc-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.doc-videos {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.video-container {
+    width: 100%;
+}
+
+.doc-video {
+    width: 100%;
+    max-height: 300px;
+    border-radius: 5px;
 }

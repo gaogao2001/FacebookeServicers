@@ -36,6 +36,7 @@
     @yield('head.scripts')
     <!-- Meta Tags -->
 
+    
 </head>
 
 <body>
@@ -46,40 +47,31 @@
             @yield('content')
         </div>
 
-        <!-- Thay vì include riêng lẻ, bọc chúng trong một container -->
-        <div id="extraControls" style="display: none; position: fixed; bottom: 70px; right: 20px; z-index: 1100;">
-            <div>@include('admin.partial.todolist')</div>
-            <div>@include('admin.partial.setting_site')</div>
-            <div>@include('Document::documentation')</div>
+        <!-- Thay thế phần nút toggle và extraControls bằng dropdown -->
+        <div class="dropdown" style="position: fixed; bottom: 20px; right: 20px; z-index: 1200;">
+            <button id="extraControlsToggle" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-headset"></i> Hỗ trợ
+            </button>
+            <div class="dropdown-menu dropdown-menu-right" style="margin-bottom: 10px;">
+                <a class="dropdown-item" href="#" id="settingLink">Cài đặt giao diện</a>
+                <a class="dropdown-item" href="#" id="todoLink">Note</a>
+                <a class="dropdown-item" href="#" id="docLink">Tài liệu</a>
+            </div>
         </div>
 
-        <!-- Nút toggle chung -->
-        <button id="extraControlsToggle" class="btn btn-primary"
-            style="position: fixed; bottom: 20px; right: 20px; z-index: 1200;">
-            Menu
-        </button>
+        <!-- Giữ nguyên các include nhưng ẩn các nút toggle gốc -->
+        <div>@include('admin.partial.todolist')</div>
+        <div>@include('admin.partial.setting_site')</div>
+        <div>@include('Document::documentation')</div>
+
+
     </div>
     @include('admin.partial.script')
     @yield('footer.scripts')
 
-    <footer class="footer" style="padding: 0px !important;">
-        <!-- ...footer content... -->
-    </footer>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const toggleBtn = document.getElementById('extraControlsToggle');
-            const extraControls = document.getElementById('extraControls');
 
-            toggleBtn.addEventListener('click', () => {
-                if (extraControls.style.display === 'none' || extraControls.style.display === '') {
-                    extraControls.style.display = 'block';
-                } else {
-                    extraControls.style.display = 'none';
-                }
-            });
-        });
-    </script>
+   
 </body>
 
 <footer class="footer" style="padding: 0px !important;">

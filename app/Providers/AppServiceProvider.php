@@ -54,6 +54,8 @@ class AppServiceProvider extends ServiceProvider
             '/notifications',
             '/notifications/*',
             '/delete-notifications',
+            '/document',
+            '/document/*',
         ]);
 
         $this->loadViewsFrom(base_path('app/Modules/Auth/Views'), 'Auth');
