@@ -9,12 +9,31 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const adsList = document.getElementById('adsList');
     const loadingIndicator = document.getElementById('loading');
-    const currentPageSpan = document.getElementById('currentPage');
-    const lastPageSpan = document.getElementById('lastPage');
     const searchInput = document.getElementById('searchInput');
     const tableResponsive = document.querySelector('.table-responsive');
     const selectAllCheckbox = document.getElementById('selectAll');
     const deleteAllButton = document.getElementById('deleteAllButton');
+    const paginationContainer = document.getElementById('pagination');
+
+    const exportSelectedButton = document.getElementById('exportSelectedButton');
+
+    function toggleSelectionButtons() {
+        const selectedItems = document.querySelectorAll('.selectItem:checked');
+        if (selectedItems.length > 0) {
+            deleteAllButton.style.display = 'inline-block';
+            $('#exportSelectedButton').show();
+        } else {
+            deleteAllButton.style.display = 'none';
+            $('#exportSelectedButton').hide();
+        }
+    }
+
+    document.addEventListener('change', function (e) {
+        if (e.target && e.target.classList.contains('selectItem')) {
+            toggleSelectionButtons();
+        }
+    });
+
 
 
     const loadAds = (page = 1, search = '', append = false) => {
@@ -32,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 data.data.forEach(ad => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td><input type="checkbox" class="selectItem" value="${ad._id.$oid}"></td>
+                           <td><input type="checkbox" class="selectItem" data-insights="${ad.insights}" value="${ad._id.$oid}"></td>
                         <td>${ad.insights}</td>
                         <td>${ad.account_type}</td>
                         <td>${ad.total_spending}</td>
@@ -48,7 +67,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         <td>${ad.admin_hidden}</td>
                         <td>${ad.user_roles}</td>
                         <td>
-                            
                             <button class="btn btn-inverse-danger deleteBtn" data-id="${ad._id.$oid}">Xóa</button>
                         </td>
                     `;
@@ -58,14 +76,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Cập nhật trạng thái phân trang
                 currentPage = data.currentPage;
                 lastPage = data.lastPage;
-                currentPageSpan.innerText = data.currentPage;
-                lastPageSpan.innerText = data.lastPage;
 
-                // Cập nhật trạng thái nút
-                document.getElementById('prevButton').disabled = currentPage <= 1;
-                document.getElementById('nextButton').disabled = currentPage >= lastPage;
-
+                // Cập nhật tiêu đề với số lượng
                 $('#adsCountTitle').text(`Quản lý Ads : Số lượng (${data.data.length})`);
+
+                // Sử dụng hàm renderPagination để hiển thị phân trang
+                renderPagination(paginationContainer, currentPage, lastPage, function (page) {
+                    loadAds(page, currentSearch);
+                });
+
                 // Đặt lại vị trí cuộn về đầu bảng
                 tableResponsive.scrollTop = 0;
 
@@ -79,6 +98,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 loadingIndicator.style.display = 'none';
             });
     };
+
+    // Thêm hàm loadFilteredAds để tải lại dữ liệu sau khi áp dụng bộ lọc
+    window.loadFilteredAds = function () {
+        currentPage = 1; // Reset về trang đầu tiên khi lọc
+        currentSearch = searchInput.value || ''; // Giữ nguyên giá trị tìm kiếm hiện tại
+        loadAds(currentPage, currentSearch);
+    };
+
+    // Khi có sự kiện chọn checkbox
+    document.addEventListener('click', function (e) {
+        if (e.target && e.target.classList.contains('selectItem')) {
+            toggleDeleteAllButton();
+        }
+    });
 
     adsList.addEventListener('click', function (e) {
         if (e.target && e.target.classList.contains('deleteBtn')) {
@@ -133,22 +166,27 @@ document.addEventListener('DOMContentLoaded', function () {
         checkboxes.forEach(checkbox => {
             checkbox.checked = selectAllCheckbox.checked;
         });
-        toggleDeleteAllButton();
+        // Gọi hàm toggleSelectionButtons thay vì toggleDeleteAllButton
+        toggleSelectionButtons();
     });
 
-    // Xử lý sự kiện nút Previous
-    document.getElementById('prevButton').addEventListener('click', () => {
-        if (currentPage > 1) {
-            loadAds(currentPage - 1, currentSearch);
-        }
-    });
-
-    // Xử lý sự kiện nút Next
-    document.getElementById('nextButton').addEventListener('click', () => {
-        if (currentPage < lastPage) {
-            loadAds(currentPage + 1, currentSearch);
-        }
-    });
+    if (exportSelectedButton) {
+        exportSelectedButton.addEventListener('click', function (e) {
+            e.preventDefault();
+            // Lấy các checkbox được chọn
+            const selectedItems = document.querySelectorAll('.selectItem:checked');
+            if (selectedItems.length === 0) {
+                Swal.fire('Lỗi!', 'Vui lòng chọn ít nhất một Ads để xuất account.', 'error');
+            } else {
+                // Lấy danh sách insights từ các checkbox (giá trị từ thuộc tính data-insights)
+                const insightsList = Array.from(selectedItems).map(item => item.getAttribute('data-insights'));
+                // Đưa danh sách vào textarea (các giá trị nối bằng dấu xuống dòng)
+                document.getElementById('account_list').value = insightsList.join('\n');
+                // Hiển thị modal xuất account
+                $('#modal-lg').modal('show');
+            }
+        });
+    }
 
     // Xử lý sự kiện tìm kiếm trực tiếp (live search)
     let debounceTimeout = null;
@@ -160,6 +198,7 @@ document.addEventListener('DOMContentLoaded', function () {
             loadAds(currentPage, currentSearch);
         }, 300); // Delay 300ms để ngăn nhiều yêu cầu
     });
+
 
     // Tải trang đầu tiên khi tải xong
     loadAds(currentPage, currentSearch);
@@ -263,4 +302,101 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
+
+    $('.sync-ads').click(function () {
+        showLoading();
+        $.ajax({
+            url: window.syncAllAdsUrl,
+            type: "GET",
+            dataType: "json",
+            success: function (data) {
+                hideLoading();
+                let results = data.data;
+                let successList = [];
+                let errorList = [];
+                $.each(results, function (uid, result) {
+                    if (result.status === 'success') {
+                        successList.push(uid);
+                    } else {
+                        errorList.push(uid);
+                    }
+                });
+
+                let msg = "";
+                if (successList.length > 0) {
+                    msg += "Đã đồng bộ ADS cho các tài khoản: " + successList.join(", ") + ".";
+                }
+                if (errorList.length > 0) {
+                    msg += " Các tài khoản không đồng bộ được (lỗi bỏ qua): " + errorList.join(", ") + ".";
+                }
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Kết quả đồng bộ ADS',
+                    text: msg,
+                });
+            },
+            error: function (xhr, status, error) {
+                hideLoading();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi!',
+                    text: 'Có lỗi xảy ra khi đồng bộ ADS.',
+                });
+                console.error('Error syncing ADS:', error);
+            }
+        });
+    });
+
+
+    function showLoading() {
+        console.log("Hiển thị loading...");
+        if ($('#loadingOverlay').length === 0) {
+            $('body').append(`
+                    <div id="loadingOverlay">
+                        <div class="loader"></div>
+                    </div>
+                `);
+        }
+    }
+
+    function hideLoading() {
+        console.log("Ẩn loading...");
+        $('#loadingOverlay').remove();
+    }
+
+    $(document).on('click', '.BtnExportAccount', function (e) {
+        e.preventDefault();
+
+        // Lấy giá trị từ các input trong modal
+        var chosenStructure = $('#chosen_structure').val().trim();
+        var accountList = $('#account_list').val().trim();
+
+        if (!chosenStructure) {
+            Swal.fire('Lỗi!', 'Bạn chưa chọn cấu trúc xuất file!', 'error');
+            return;
+        }
+
+        if (!accountList) {
+            Swal.fire('Lỗi!', 'Bạn chưa nhập danh sách tài khoản!', 'error');
+            return;
+        }
+
+        // Tạo form ẩn và submit để tải file
+        var csrfToken = $('meta[name="csrf-token"]').attr('content');
+        var form = $('<form></form>')
+            .attr({
+                method: 'POST',
+                action: '/export_account'
+            });
+
+        // Thêm CSRF token
+        form.append($('<input type="hidden" name="_token">').val(csrfToken));
+        // Thêm các input cần gửi
+        form.append($('<input type="hidden" name="chosen_structure">').val(chosenStructure));
+        form.append($('<input type="hidden" name="account_list">').val(accountList));
+
+        // Thêm form vào body và submit
+        $('body').append(form);
+        form.submit();
+    })
 });

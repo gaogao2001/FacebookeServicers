@@ -627,7 +627,7 @@ $(document).ready(function () {
             }
         });
     }
-    
+
     function loadContentVideoList() {
         $('#contentVideoList').empty();
         if (currentContentVideoFolder === null) {
@@ -1090,6 +1090,31 @@ $(document).ready(function () {
             }
         }
 
+        if (activeTab === 'videos-tab' && activeMainTab === 'extract-audio-tab') {
+            if (fileManagerSelectedVideos.length > 0) {
+                const videoUrl = fileManagerSelectedVideos[0]; // Take the first selected video
+                $('#extractVideoUrl').val(videoUrl);
+                $('#extractVideoType').val('filemanager');
+                $('#extractVideoName').text(videoUrl.split('/').pop());
+
+                // Show video preview from URL
+                // Show video preview from URL - Update this part
+                $('#extractVideoPreview').html(`
+                    <div class="preview-video position-relative mb-3" style="width: 200px;">
+                        <div class="video-thumbnail position-relative" style="height: 150px; overflow: hidden; background-color: #000;">
+                            <video width="100%" height="100%" style="object-fit: cover;" controls>
+                                <source src="${videoUrl}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                            <div class="video-name position-absolute bottom-0 start-0 end-0 p-1 bg-dark bg-opacity-75 text-white small text-truncate">
+                                ${videoUrl.split('/').pop()}
+                            </div>
+                        </div>
+                    </div>
+                `);
+            }
+        }
+
         fileManagerSelectedVideos = [];
         fileManagerSelectedImages = [];
         $('#contentImageSelectorModal').modal('hide');
@@ -1325,6 +1350,15 @@ $(document).ready(function () {
         $('#videoOptionModal').modal('show');
     });
 
+    $(document).on('click', '.extract-video-btn', function () {
+        // Set the current active tab for FileManager
+        $('#editorTabs .nav-link').removeClass('active');
+        $('#extract-audio-tab').addClass('active');
+
+        // Show the video option modal
+        $('#videoOptionModal').modal('show');
+    });
+
     $('#extractVideoInput').on('change', function () {
         const file = this.files[0];
         if (file) {
@@ -1333,9 +1367,13 @@ $(document).ready(function () {
             $('#extractVideoType').val('local');
             $('#extractVideoUrl').val('');
 
+            // Update video preview
+            updateExtractVideoPreview(file);
+
             console.log("Đã chọn file video cho extract audio: " + file.name);
         }
     });
+
 
 
 
@@ -1480,6 +1518,31 @@ $(document).ready(function () {
         // Đảm bảo load videos khi modal hiển thị
         loadContentVideoList();
     });
+
+    function updateExtractVideoPreview(file) {
+        // Clear previous preview
+        $('#extractVideoPreview').empty();
+
+        if (file) {
+            // Create object URL for the file
+            const url = URL.createObjectURL(file);
+
+            // Add video preview
+            $('#extractVideoPreview').html(`
+                <div class="preview-video position-relative mb-3" style="width: 200px;">
+                    <div class="video-thumbnail position-relative" style="height: 150px; overflow: hidden; background-color: #000;">
+                        <video width="100%" height="100%" style="object-fit: cover;" controls>
+                            <source src="${url}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        <div class="video-name position-absolute bottom-0 start-0 end-0 p-1 bg-dark bg-opacity-75 text-white small text-truncate">
+                            ${file.name}
+                        </div>
+                    </div>
+                </div>
+            `);
+        }
+    }
 
 
 });

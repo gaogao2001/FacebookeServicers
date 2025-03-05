@@ -36,6 +36,9 @@ Route::post('/Android/Start-share', [HomeAccountController::class, 'ShareNow'])
 Route::get('Android/SyncAllFanpage', [HomeAccountController::class, 'syncAllFanpage'])
     ->name('android.syncAllFanpage');
 
+Route::get('Android/SyncAllAds', [HomeAccountController::class, 'syncAllAds'])
+    ->name('android.syncAllAds');
+
 Route::get('/multi_message_comment_page', [HomeAccountController::class, 'multiMessageCommentPage'])->name('facebook.multi_message_comment_page');
 
 Route::get('Android/Show-more-message/{uid}', [HomeAccountController::class, 'showMoreMessage'])

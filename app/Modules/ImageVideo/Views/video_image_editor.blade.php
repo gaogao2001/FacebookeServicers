@@ -271,29 +271,50 @@
                     </form>
                 </div>
                 <!-- Tab Extract Audio Form -->
+                <!-- Locate the extract-audio-form section and add the preview container after the video selection row -->
+
+                <!-- Update the layout for the video preview container -->
+                <!-- Replace the existing video preview container with this structure -->
+
                 <div class="tab-pane fade p-3" id="extract-audio-form" role="tabpanel" aria-labelledby="extract-audio-tab">
-                    <h6> <small>Tách âm thanh từ video</small> </h6>
-                    <form action="/extract-audio" method="POST" enctype="multipart/form-data" id="extractAudioForm">
-                        @csrf
-                        <!-- Thay thế input file cũ bằng row mới với nút chọn video -->
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <button type="button" class="btn btn-primary extract-video-btn w-100">
-                                    <i class="bi bi-file-earmark-play"></i> Chọn Video
-                                </button>
-                                <input type="file" name="video" id="extractVideoInput" class="form-control d-none" accept="video/*">
-                                <input type="hidden" name="video_url" id="extractVideoUrl">
-                                <input type="hidden" name="video_type" id="extractVideoType" value="local">
-                                <div class="selected-video-name mt-1 small text-truncate" id="extractVideoName"></div>
-                            </div>
+                    <div class="row align-items-center">
+                        <div class="col-md-4">
+                            <h6><small>Tách âm thanh từ video</small></h6>
+                            <form action="/extract-audio" method="POST" enctype="multipart/form-data" id="extractAudioForm">
+                                @csrf
+                                <!-- Video selection button -->
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <button type="button" class="btn btn-primary extract-video-btn w-100">
+                                            <i class="bi bi-file-earmark-play"></i> Chọn Video
+                                        </button>
+                                        <input type="file" name="video" id="extractVideoInput" class="form-control d-none" accept="video/*">
+                                        <input type="hidden" name="video_url" id="extractVideoUrl">
+                                        <input type="hidden" name="video_type" id="extractVideoType" value="local">
+                                        <div class="selected-video-name mt-1 small text-truncate" id="extractVideoName"></div>
+                                    </div>
+                                </div>
+
+                                <div class="input-group mb-3">
+                                    <label for="outputAudio" class="input-group-text">Tên</label>
+                                    <input type="text" name="outputAudio" id="outputAudio" class="form-control" placeholder="ví dụ:(tai_hehe.mp3)" required onblur="if(this.value && !this.value.endsWith('.mp3')) { this.value += '.mp3'; }">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Tách Audio</button>
+                            </form>
                         </div>
 
-                        <div class="input-group mb-3" style="width: 300px;">
-                            <label for="outputAudio" class="input-group-text">Tên</label>
-                            <input type="text" name="outputAudio" id="outputAudio" class="form-control" placeholder="ví dụ:(tai_hehe.mp3)" required onblur="if(this.value && !this.value.endsWith('.mp3')) { this.value += '.mp3'; }">
+                        <div class="col-md-1 d-flex justify-content-center">
+                            <div class="vr" style="height: 287px;"></div>
                         </div>
-                        <button type="submit" class="btn btn-primary">Tách Audio</button>
-                    </form>
+
+                        <div class="col-md-7">
+                            <h1>Video</h1>
+                            <!-- Video preview container now displayed horizontally -->
+                            <div id="extractVideoPreview" class="d-flex flex-wrap gap-2">
+                                <!-- Video preview will be added here dynamically -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <!-- New Tab Pane for Concat Video Segments -->
                 <div class="tab-pane fade p-3" id="concat-segments-form" role="tabpanel" aria-labelledby="concat-segments-tab">

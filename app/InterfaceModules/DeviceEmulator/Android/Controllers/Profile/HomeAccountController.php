@@ -21,6 +21,7 @@ use HoangquyIT\ModelFacebook\Android\Groups\GroupsManager;
 use HoangquyIT\ModelFacebook\Android\Marketplace\MainMarketplace;
 use HoangquyIT\ModelFacebook\Android\Message\MessageControler;
 use App\InterfaceModules\DeviceEmulator\Android\Controllers\DeviceEmulatorController;
+use HoangquyIT\ModelFacebook\Android\AdsManager\AdsControler;
 
 
 class HomeAccountController extends Controller
@@ -393,113 +394,6 @@ class HomeAccountController extends Controller
         }
     }
 
-    public function syncFanpage(Request $request, $uid)
-    {
-        // get uid ; check connect
-        $this->vailidateUids($uid);
-        if ($this->ConnectData) {
-            $Accountuse = new FacebookAccount($this->FacebookUse);
-
-            if ($Accountuse->Connect) {
-
-                try {
-                    $CheckConnect = new CheckConnect($Accountuse); // kết nối facebook
-                } catch (\Throwable $ex) {
-                    return response()->json([
-                        'status'  => 'not_synced',
-                        'message' => 'Tài khoản ' . $uid . ' chưa được đồng bộ - Lỗi CheckConnect: ' . $ex->getMessage()
-                    ], 200);
-                }
-                // Nếu không thể kết nối qua CheckConnect, trả về thông báo chưa được đồng bộ
-                if (!$CheckConnect->ConnectAccount) {
-                    return response()->json([
-                        'status'  => 'not_synced',
-                        'message' => 'Tài khoản ' . $uid . ' chưa được đồng bộ'
-                    ], 200);
-                }
-
-                if ($CheckConnect->ConnectAccount) {
-                    $profile = new ProfileManager($Accountuse); // kết nối lấy thông tin account facebook
-                    $MultiAccount = $profile->LoadAccountControl();
-
-                    if (!empty($MultiAccount)) {
-                        foreach ($MultiAccount as $_select) {
-                            $page_id = $_select->profile->id ?? null;
-                            $page_name = $_select->profile->name ?? null;
-                            $access_token = $_select->session_info->access_token ?? null;
-                            if ($_select->AccountType == 'PageAccount') {
-                                if ($page_id && $page_name && $access_token) {
-                                    $existingPage = $this->fanpageManagerRepository->findOneFanpage([
-                                        'uid_controler' => $this->uid,
-                                        'page_id'      => $page_id
-                                    ]);
-
-                                    if ($existingPage) {
-                                        $this->fanpageManagerRepository->update($existingPage->_id->__toString(), [
-                                            'page_name'    => $page_name,
-                                            'access_token' => $access_token,
-                                            'config_auto'  => config('defaultconfigs.defaultConfigFanpage'),
-                                        ]);
-                                    } else {
-                                        $this->fanpageManagerRepository->create([
-                                            'uid_controler' => $this->uid,
-                                            'page_id'      => $page_id,
-                                            'page_name'    => $page_name,
-                                            'access_token' => $access_token,
-                                            'config_auto'  => config('defaultconfigs.defaultConfigFanpage'),
-                                        ]);
-                                    }
-                                }
-                            }
-                        }
-
-                        return response()->json([
-                            'status'  => 'success',
-                            'message' => 'Đồng bộ Fanpage thành công cho tài khoản ' . $uid
-                        ], 200);
-                    } else {
-                        // Trường hợp MultiAccount rỗng -> chưa được đồng bộ
-                        return response()->json([
-                            'status'  => 'not_synced',
-                            'message' => 'Tài khoản ' . $uid . ' chưa được đồng bộ'
-                        ], 200);
-                    }
-                } else {
-                    $thongTin['status'] = false;
-                    $thongTin['message'] = 'Account đang bị CHECKPOINT';
-                    return response()->json($thongTin, 200);
-                }
-            } else {
-                $thongTin['status'] = false;
-                $thongTin['message'] = 'Không thể thiết lập kết nối Device Android';
-                return response()->json($thongTin, 200);
-            }
-        } else {
-            return response()->json([
-                'status'  => 'error',
-                'message' => $this->Message
-            ], 200);
-        }
-    }
-    // Đồng bộ tất cả Fanpage
-    public function syncAllFanpage(Request $request)
-    {
-        $allUids = $this->accountRepository->getAllUids();
-        $results = [];
-
-        foreach ($allUids as $uid) {
-            // Gọi syncFanpage cho từng uid và thu thập kết quả trả về (cả thành công và không đồng bộ)
-            $response = $this->syncFanpage($request, $uid);
-            $result = json_decode($response->getContent(), true);
-            $results[$uid] = $result;
-        }
-
-        return response()->json([
-            'status' => 'success',
-            'data'   => $results,
-        ], 200);
-    }
-
     protected function startSub(Request $request, $uid)
     {
         $limit =  $request->input('limit');
@@ -583,9 +477,6 @@ class HomeAccountController extends Controller
         $uid_sub = $request->input('uid_sub');
 
         dd($limit, $uid_sub);
-
-
-      
     }
 
     public function ShareNow(Request $request)
@@ -620,7 +511,7 @@ class HomeAccountController extends Controller
         foreach ($uids as $uid) {
             $response = $this->getMessageByUid($uid);
             $messages = json_decode($response->getContent());
-           
+
             $data[] = (object)[
                 'messages' => $messages->data,
             ];
@@ -664,7 +555,7 @@ class HomeAccountController extends Controller
                     $_Message = new MessageControler($Accountuse);
 
                     $messages = $_Message->LoadAllMessage();
-                   
+
 
                     return response()->json([
                         'data' => $messages,
@@ -755,5 +646,251 @@ class HomeAccountController extends Controller
                 'message' => $this->Message
             ], 200);
         }
+    }
+
+    // Đồng bộ Fanpage
+    public function syncFanpage(Request $request, $uid)
+    {
+        // get uid ; check connect
+        $this->vailidateUids($uid);
+        if ($this->ConnectData) {
+            $Accountuse = new FacebookAccount($this->FacebookUse);
+
+            if ($Accountuse->Connect) {
+
+                try {
+                    $CheckConnect = new CheckConnect($Accountuse); // kết nối facebook
+                } catch (\Throwable $ex) {
+                    return response()->json([
+                        'status'  => 'not_synced',
+                        'message' => 'Tài khoản ' . $uid . ' chưa được đồng bộ - Lỗi CheckConnect: ' . $ex->getMessage()
+                    ], 200);
+                }
+                // Nếu không thể kết nối qua CheckConnect, trả về thông báo chưa được đồng bộ
+                if (!$CheckConnect->ConnectAccount) {
+                    return response()->json([
+                        'status'  => 'not_synced',
+                        'message' => 'Tài khoản ' . $uid . ' chưa được đồng bộ'
+                    ], 200);
+                }
+
+                if ($CheckConnect->ConnectAccount) {
+                    $profile = new ProfileManager($Accountuse); // kết nối lấy thông tin account facebook
+                    $MultiAccount = $profile->LoadAccountControl();
+
+                    if (!empty($MultiAccount)) {
+                        foreach ($MultiAccount as $_select) {
+                            $page_id = $_select->profile->id ?? null;
+                            $page_name = $_select->profile->name ?? null;
+                            $access_token = $_select->session_info->access_token ?? null;
+                            if ($_select->AccountType == 'PageAccount') {
+                                if ($page_id && $page_name && $access_token) {
+                                    $existingPage = $this->fanpageManagerRepository->findOneFanpage([
+                                        'uid_controler' => $this->uid,
+                                        'page_id'      => $page_id
+                                    ]);
+
+                                    if ($existingPage) {
+                                        $this->fanpageManagerRepository->update($existingPage->_id->__toString(), [
+                                            'page_name'    => $page_name,
+                                            'access_token' => $access_token,
+                                            'config_auto'  => config('defaultconfigs.defaultConfigFanpage'),
+                                        ]);
+                                    } else {
+                                        $this->fanpageManagerRepository->create([
+                                            'uid_controler' => $this->uid,
+                                            'page_id'      => $page_id,
+                                            'page_name'    => $page_name,
+                                            'access_token' => $access_token,
+                                            'config_auto'  => config('defaultconfigs.defaultConfigFanpage'),
+                                        ]);
+                                    }
+                                }
+                            }
+                        }
+
+                        return response()->json([
+                            'status'  => 'success',
+                            'message' => 'Đồng bộ Fanpage thành công cho tài khoản ' . $uid
+                        ], 200);
+                    } else {
+                        // Trường hợp MultiAccount rỗng -> chưa được đồng bộ
+                        return response()->json([
+                            'status'  => 'not_synced',
+                            'message' => 'Tài khoản ' . $uid . ' chưa được đồng bộ'
+                        ], 200);
+                    }
+                } else {
+                    $thongTin['status'] = false;
+                    $thongTin['message'] = 'Account đang bị CHECKPOINT';
+                    return response()->json($thongTin, 200);
+                }
+            } else {
+                $thongTin['status'] = false;
+                $thongTin['message'] = 'Không thể thiết lập kết nối Device Android';
+                return response()->json($thongTin, 200);
+            }
+        } else {
+            return response()->json([
+                'status'  => 'error',
+                'message' => $this->Message
+            ], 200);
+        }
+    }
+
+    // Đồng bộ tất cả Fanpage
+    public function syncAllFanpage(Request $request)
+    {
+        $allUids = $this->accountRepository->getAllUids();
+        $results = [];
+
+        foreach ($allUids as $uid) {
+            // Gọi syncFanpage cho từng uid và thu thập kết quả trả về (cả thành công và không đồng bộ)
+            $response = $this->syncFanpage($request, $uid);
+            $result = json_decode($response->getContent(), true);
+            $results[$uid] = $result;
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $results,
+        ], 200);
+    }
+
+    // Đồng bộ Ads
+
+    public function syncAds(Request $request, $uid)
+    {
+        $this->vailidateUids($uid);
+
+        $requestForRenew = new Request();
+        $requestForRenew->replace(['uid' => $uid]);
+
+
+        if ($this->ConnectData) {
+            $Accountuse = new FacebookAccount($this->FacebookUse);
+            if ($Accountuse->Connect) {
+                $CheckConnect = new CheckConnect($Accountuse);
+                if ($CheckConnect->ConnectAccount) {
+                    // Use the aliased FBAccountManager
+                    $_account = new AccountManager($Accountuse);
+                    $resultConvert = $_account->ConverSession('438142079694454');
+
+                    if ($resultConvert->status && !empty($resultConvert->session)) {
+                        $Accountuse->AccountInfo['android_device_ads'] = $resultConvert->session;
+                        $ArrayUpdate = [
+                            'android_device_ads' => $resultConvert->session
+                        ];
+                        $this->accountRepository->update($this->_id->__toString(), [
+                            'android_device_message' => $resultConvert->session
+                        ]);
+                    }
+
+                    // Sau khi đã chuyển đổi (dù thành hay không), gọi renewSession để cập nhật lại phiên
+                    $renewSession = new DeviceEmulatorController($this->accountRepository, $this->fanpageManagerRepository);
+                    $renewSession->renewSession($requestForRenew);
+
+                    $_ads = new AdsControler($Accountuse);
+                    $ResultLoad = $_ads->AdsManagerOnboardingAccountSelectionScreen_Query();
+
+                    if ($ResultLoad->status) {
+                        $collection = app('mongo')->FacebookData->Adsmanager;
+                        $syncedCount = 0;
+
+                        foreach ($ResultLoad->account_list as $_slectAds) {
+                            $adData = [
+                                'insights' => $_slectAds->uid ?? null,
+                                'account_type' => $_slectAds->account_type ?? null,
+                                'total_spending' => $_slectAds->total_spending ?? null,
+                                'act_id' => $_slectAds->act_id ?? null,
+                                'name' => $_slectAds->act_name ?? null,
+                                'legacy_account_id' => $_slectAds->legacy_account_id ?? null,
+                                'currency' => $_slectAds->currency ?? null,
+                                'created_time' => $_slectAds->created_time ?? null,
+                                'next_bill_date' => $_slectAds->next_bill_date ?? null,
+                                'timezone' => $_slectAds->timezone->difference ?? null,
+                                'timezone_name' => $_slectAds->timezone->timezone ?? null,
+                                'account_status' => $_slectAds->account_status ?? null,
+                                'admin_list' => [],
+                                'admin_hidden' => $_slectAds->admin_hidden ?? null,
+                                'user_roles' => $_slectAds->user_roles ?? null,
+                                'nguong_tt' => $_slectAds->nguong_tt ?? null,
+                                'nguong_tt_hientai' => $_slectAds->nguong_tt_hientai ?? null,
+                                'uid_controler' => $uid, // Thêm uid của tài khoản để biết tài khoản nào quản lý
+                                'updated_at' => new \MongoDB\BSON\UTCDateTime(now()->timestamp * 1000)
+                            ];
+
+                            // Kiểm tra xem dữ liệu đã tồn tại chưa dựa trên insights và act_id  
+                            $filter = [
+                                'insights' => $_slectAds->uid,
+                                'act_id' => $_slectAds->act_id,
+                            ];
+
+                            // Cập nhật nếu có, chèn mới nếu không tìm thấy
+                            $update = ['$set' => $adData];
+                            $result = $collection->updateOne($filter, $update, ['upsert' => true]);
+                            $syncedCount += ($result->getModifiedCount() + $result->getUpsertedCount());
+                        }
+
+                        return response()->json([
+                            'status' => 'success',
+                            'message' => "Đã đồng bộ $syncedCount tài khoản quảng cáo cho tài khoản $uid"
+                        ], 200);
+                    } else {
+                        return response()->json([
+                            'status' => 'warning',
+                            'message' => 'Không tìm thấy tài khoản quảng cáo cho tài khoản ' . $uid
+                        ], 200);
+                    }
+
+
+                    //print_r(json_encode($_Message->LoadMessageByUid('100028048535913')));
+                } else {
+                    $thongTin['status'] = false;
+                    $thongTin['message'] = 'Account đang bị CHECKPOINT';
+                    return response()->json(['response' => $thongTin], 200);
+                }
+            } else {
+                $thongTin['status'] = false;
+                $thongTin['message'] = 'Không thể thiết lập kết nối Device Android';
+                return response()->json(['response' => $thongTin], 200);
+            }
+        } else {
+            return response()->json([
+                'status' => 'error',
+                'message' => $this->Message
+            ], 200);
+        }
+    }
+
+    // Đồng bộ tất cả Fanpage
+    public function syncAllAds(Request $request)
+    {
+  
+        $allUids = $this->accountRepository->getAllUids();
+
+        // Nếu số uid vượt quá 50 thì lấy 50 uid đầu tiên,
+        // lưu lại các uid còn lại vào file /tmp/listCheckAds.txt
+        if (count($allUids) > 5) {
+            $uidsForSync = array_slice($allUids, 0, 5);
+            $remainingUids = array_slice($allUids, 5);
+
+            file_put_contents("/tmp/listCheckAds.txt", implode("\n", $remainingUids));
+
+        } else {
+            $uidsForSync = $allUids;
+        }
+
+        $results = [];
+        foreach ($uidsForSync as $uid) {
+            $response = $this->syncAds($request, $uid);
+            $result = json_decode($response->getContent(), true);
+            $results[$uid] = $result;
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $results,
+        ], 200);
     }
 }

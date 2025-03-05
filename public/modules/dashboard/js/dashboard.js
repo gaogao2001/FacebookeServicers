@@ -196,24 +196,44 @@ $(document).ready(function () {
         updateNotificationCount();
         setInterval(updateNotificationCount, 30000);
 
-        // Khi người dùng click vào biểu tượng thông báo, tải danh sách 3 thông báo mới nhất
-        $('#notificationDropdown').on('click', function () {
+        let notificationsLoaded = false;
+
+        // Bắt sự kiện khi dropdown hiện ra (sự kiện của Bootstrap)
+        $(document).on('show.bs.dropdown', function (e) {
+            if (e.target.id === 'notificationDropdown' || $(e.target).find('#notificationDropdown').length) {
+                if (!notificationsLoaded) {
+                    loadNotifications();
+                    notificationsLoaded = true;
+                }
+            }
+        });
+    
+        // Bắt sự kiện khi dropdown ẩn đi
+        $(document).on('hidden.bs.dropdown', function (e) {
+            if (e.target.id === 'notificationDropdown' || $(e.target).find('#notificationDropdown').length) {
+                notificationsLoaded = false; // Đặt lại trạng thái để lần sau load lại
+            }
+        });
+    
+        // Tách hàm load thông báo ra để tái sử dụng
+        function loadNotifications() {
             $.ajax({
                 url: '/notification',
                 method: 'GET',
                 dataType: 'json',
                 data: { latest: true },
                 success: function (response) {
+                    const dropdownMenu = $('#notificationDropdown').siblings('.dropdown-menu');
+                    dropdownMenu.empty();
+                    dropdownMenu.append('<h6 class="p-3 mb-0">Notifications</h6>');
+                    dropdownMenu.append('<div class="dropdown-divider"></div>');
+    
                     if (response.data && response.data.length > 0) {
-                        // Sắp xếp thông báo giảm dần theo thời gian (giả sử create_time có định dạng chuẩn)
+                        // Sắp xếp thông báo giảm dần theo thời gian
                         const sortedNotifications = response.data.sort((a, b) => new Date(b.create_time) - new Date(a.create_time));
                         // Lấy 3 thông báo mới nhất
                         const notifications = sortedNotifications.slice(0, 3);
-                        const dropdownMenu = $('#notificationDropdown').siblings('.dropdown-menu');
-                        dropdownMenu.empty();
-                        dropdownMenu.append('<h6 class="p-3 mb-0">Notifications</h6>');
-                        dropdownMenu.append('<div class="dropdown-divider"></div>');
-
+    
                         notifications.forEach(function (item) {
                             dropdownMenu.append(`
                                 <a class="dropdown-item preview-item showDropdownNotification" href="#" data-id="${item._id.$oid}">
@@ -230,20 +250,37 @@ $(document).ready(function () {
                                 <div class="dropdown-divider"></div>
                             `);
                         });
-
-                        // Thêm mục "See all notifications"
-                        dropdownMenu.append('<p class="p-3 mb-0 text-center see-all-notifications" style="cursor:pointer;">See all notifications</p>');
+                    } else {
+                        // Hiển thị "No Notification!" khi không có thông báo
+                        dropdownMenu.append(`
+                            <div class="text-center p-3">
+                                <p>Không có thông báo mới !</p>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                        `);
                     }
+    
+                    // Thêm mục "See all notifications" với sự kiện click
+                    dropdownMenu.append('<p class="p-3 mb-0 text-center see-all-notifications" style="cursor:pointer;">See all notifications</p>');
                 },
                 error: function () {
                     console.error('Lỗi khi tải danh sách thông báo');
+                    const dropdownMenu = $('#notificationDropdown').siblings('.dropdown-menu');
+                    dropdownMenu.empty();
+                    dropdownMenu.append('<h6 class="p-3 mb-0">Notifications</h6>');
+                    dropdownMenu.append('<div class="dropdown-divider"></div>');
+                    dropdownMenu.append('<div class="text-center p-3"><p>No Notification!</p></div>');
+                    dropdownMenu.append('<div class="dropdown-divider"></div>');
+                    dropdownMenu.append('<p class="p-3 mb-0 text-center see-all-notifications" style="cursor:pointer;">See all notifications</p>');
                 }
             });
-        });
+        }
+
 
         // Sự kiện click cho thông báo trong dropdown: hiển thị modal chi tiết (giống nút "Xem" trong trang notification)
         $(document).on('click', '.showDropdownNotification', function (e) {
             e.preventDefault();
+            e.stopPropagation(); // Ngăn dropdown đóng lại
             const id = $(this).data('id');
             $.ajax({
                 url: '/notifications',

@@ -14,6 +14,12 @@
                 </button>
             </div>
             <div class="modal-body" style="color: black;">
+                 <!-- Danh sách UID => uid_list -->
+                 <div class="form-group">
+                    <label for="uid_list">Danh sách UID</label>
+                    <textarea class="form-control" id="uid_list" name="uid_list" rows="5" placeholder="Nhập danh sách UID (mỗi UID một dòng)" style="color: black !important; overflow-y: auto;">{{ session('fb_filters_input.uid_list') }}</textarea>
+                    <small class="form-text text-muted">Nhập mỗi UID trên một dòng riêng biệt.</small>
+                </div>
                 <!-- Giới tính => gender -->
                 <div class="form-group">
                     <label for="gender">Giới tính</label>
@@ -116,6 +122,7 @@
 
             // Thu thập dữ liệu từ các input
             const filterData = {
+                uid_list: $('#uid_list').val(),
                 gender: $('#gender').val(),
                 birthday_from: $('#birthday_from').val(),
                 birthday_to: $('#birthday_to').val(),

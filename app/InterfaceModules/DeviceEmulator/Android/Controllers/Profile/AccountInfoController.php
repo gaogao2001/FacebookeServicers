@@ -89,14 +89,11 @@ class AccountInfoController extends Controller
                     $this->InterfaceUse = $selectedSetting;
                 }
 
-               
-
                 // kiểm tra kết nối của phần network
                 $_Network = new NetworkControler();
              
                 $CheckConnect = $_Network->TestConnect($this->account->networkuse);
                
-           
                 if (!$CheckConnect) {
                   
                     if ($this->account->networkuse->type == 'interfaces') {

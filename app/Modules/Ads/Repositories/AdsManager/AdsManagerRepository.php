@@ -24,13 +24,14 @@ class AdsManagerRepository extends BaseRepository implements AdsManagerRepositor
             $filters = session('fanpage_filters', []);
         }
 
+
         $mongoFilters = [];
         foreach ($filters as $key => $value) {
             if (!is_null($value) && $value !== '') {
                 $mongoFilters[$key] = is_numeric($value) ? (int)$value : $value;
             }
         }
-
+      
         $options = [
             'limit' => $perPage,
             'skip' => ($page - 1) * $perPage,
@@ -38,12 +39,10 @@ class AdsManagerRepository extends BaseRepository implements AdsManagerRepositor
         ];
 
         try {
-            
+
             $cursor = $this->model->find($mongoFilters, $options);
             $data = $cursor->toArray();
-       
         } catch (\Exception $e) {
-           
         }
 
         $total = $this->model->countDocuments($mongoFilters);

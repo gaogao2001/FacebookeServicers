@@ -12,6 +12,8 @@ use HoangquyIT\ModelFacebook\FacebookApi;
 
 $database = new HoangquyIT\MongoDB\Client("mongodb://localhost:27017");
 $FileData = '/tmp/tempchecklive.txt';
+
+
 $linesToRead = 500;
 
 if (file_exists($FileData)) {

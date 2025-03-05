@@ -45,7 +45,6 @@ class FacebookController extends Controller
         $liveAccounts = $this->accountRepository->countAccounts(['status' => 'LIVE']);
         $kxdAccounts = $this->accountRepository->countAccounts(['status' => 'KXD']);
 
-
         //var_dump($filters);
         //		die();
         // Áp dụng bộ lọc cho phân trang
@@ -757,6 +756,13 @@ class FacebookController extends Controller
 
         session(['fb_filters_input' => $filters]);
 
+        if (!empty($filters['uid_list'])) {
+            $uidList = preg_split("/\r\n|\n|\r/", $filters['uid_list']);
+            $uidList = array_filter(array_map('trim', $uidList)); // Loại bỏ khoảng trắng và các dòng trống
+            if (!empty($uidList)) {
+                $query['uid'] = ['$in' => $uidList];
+            }
+        }
 
         //port proxy done
         if (!empty($filters['networkuse_port'])) {
@@ -845,8 +851,6 @@ class FacebookController extends Controller
             }
         }
 
-
-        // Lọc theo số lượng bạn bè và nhóm
         if (!empty($filters['friends_from']) || !empty($filters['friends_to'])) {
             $friendsRange = [
                 'from' => !empty($filters['friends_from']) ? (int)$filters['friends_from'] : null,
@@ -858,6 +862,8 @@ class FacebookController extends Controller
         } else {
             $friendUIDs = []; // Nếu không có điều kiện lọc bạn bè, giữ mảng rỗng
         }
+
+
 
         if (!empty($filters['groups_from']) || !empty($filters['groups_to'])) {
             $groupsRange = [
@@ -950,7 +956,7 @@ class FacebookController extends Controller
     public function clearFilter(Request $request)
     {
         // Xóa session chứa bộ lọc
-        $request->session()->forget('fb_filters');
+        $request->session()->forget(['fb_filters', 'fb_filters_input']);
         return response()->json(['message' => 'Bộ lọc đã được xóa thành công.']);
     }
 

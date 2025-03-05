@@ -15,3 +15,5 @@ Route::delete('/admin/facebook/adsmanager/{id}', [AdsManagerController::class, '
 Route::post('/admin/facebook/adsmanager/all-delete', [AdsManagerController::class, 'allDelete']);
 Route::post('/filter_ads', [AdsManagerController::class, 'filterAds']);
 Route::post('/clear_filter_ads', [AdsManagerController::class, 'clearFilter']);
+
+Route::post('/export_account', [AdsManagerController::class, 'exportAccount']);

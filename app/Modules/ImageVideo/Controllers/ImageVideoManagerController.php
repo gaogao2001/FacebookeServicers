@@ -59,8 +59,6 @@ class ImageVideoManagerController extends Controller
             'uid' => 'required'
         ]);
 
-
-
         // Nơi lưu trữ output của hình ảnh và video
         $uid = $request->input('uid');
 

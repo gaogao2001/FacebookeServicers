@@ -112,3 +112,227 @@
         margin-top: 10px;
         color: #FFFFFF;
     }
+
+    /* Toàn bộ modal */
+    #deleteAdsModal .modal-content {
+        background-color: #ffffff;
+        /* Màu nền trắng */
+        border-radius: 8px;
+        /* Bo góc */
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        /* Đổ bóng */
+        color: #333333;
+        /* Màu chữ chính */
+    }
+
+    /* Header của modal */
+    #deleteAdsModal .modal-header {
+        border-bottom: 1px solid #e9ecef;
+        padding: 15px 20px;
+        background-color: #f8f9fa;
+        /* Màu nền header */
+        color: #495057;
+        /* Màu chữ header */
+        font-size: 18px;
+        font-weight: 500;
+    }
+
+    /* Body của modal */
+    #deleteAdsModal .modal-body {
+        padding: 20px;
+    }
+
+    /* Form input */
+    #deleteAdsModal .form-control {
+        background-color: #ffffff;
+        color: #333333;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    #deleteAdsModal .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        outline: none;
+    }
+
+    /* Danh sách các tài khoản đã chọn */
+    #deleteAdsModal .list-group-item {
+        background-color: #f8f9fa;
+        color: #333333;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        margin-bottom: 5px;
+        padding: 10px;
+    }
+
+    /* Footer của modal */
+    #deleteAdsModal .modal-footer {
+        border-top: 1px solid #e9ecef;
+        padding: 10px 15px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    /* Nút */
+    #deleteAdsModal .btn {
+        padding: 8px 15px;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    #deleteAdsModal .btn-secondary {
+        background-color: #6c757d;
+        color: #ffffff;
+        border: none;
+    }
+
+    #deleteAdsModal .btn-secondary:hover {
+        background-color: #5a6268;
+    }
+
+    #deleteAdsModal .btn-primary {
+        background-color: #007bff;
+        color: #ffffff;
+        border: none;
+    }
+
+    #seleteAccountModal .btn-primary:hover {
+        background-color: #0056b3;
+    }
+
+    /* Style cho select nhóm */
+    #seleteAccountModal .form-group.group-select {
+        display: none;
+        /* Ẩn mặc định */
+        margin-top: 10px;
+    }
+
+    .input-group-text {
+        background-color: #0056b3;
+        /* Màu nền xanh nhạt hơn */
+        color: #ffffff;
+        /* Màu chữ trắng */
+        border: none;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .input-group-text:hover {
+        background-color: #ffffff;
+        /* Màu nền trắng */
+        color: #0056b3;
+        /* Màu chữ xanh đậm */
+    }
+
+    .uid-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+    .uid-select {
+        width: 30%;
+    }
+
+    /* Tạo lưới 3 cột, mỗi cột chiếm 1/3 chiều rộng, khoảng cách giữa các mục là 10px */
+    .uid-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        /* Hoặc margin nếu thích */
+    }
+
+    .uid-item {
+        position: relative;
+        /* Cho phép đặt nút xóa chồng lên nếu muốn */
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        padding: 10px;
+        color: #333333;
+    }
+
+    /* Nút xóa nhỏ nằm ở góc, nếu muốn */
+    .uid-remove-btn {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: rgb(15, 15, 15);
+        color: rgb(238, 233, 233);
+        border: none;
+        border-radius: 50%;
+        font-size: 11px;
+        padding: 3px 6px;
+        cursor: pointer;
+    }
+
+    .uid-remove-btn:hover {
+        background: #c82333;
+    }
+
+    #deleteAdsModal .modal-dialog {
+        max-width: 40%;
+        /* to rộng bớt cũng được */
+    }
+
+    #deleteAdsModal .modal-body {
+        max-height: 60vh;
+
+        overflow-y: auto;
+    }
+
+    /* Style for table rows */
+    #adsTable tbody tr:hover {
+        background-color: #f1f1f1;
+        /* Màu nền khi hover */
+    }
+
+    /* Style for table cells with truncated content */
+    #adsTable tbody tr:hover td {
+        overflow: visible;
+        white-space: normal;
+        /* Hiển thị nội dung đầy đủ khi hover */
+    }
+
+    #loadingOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 100000;
+    }
+
+    .loader {
+        width: fit-content;
+        font-size: 40px;
+        font-family: system-ui, sans-serif;
+        font-weight: bold;
+        text-transform: uppercase;
+        color: #0000;
+        -webkit-text-stroke: 1px #fff;
+        background: linear-gradient(-60deg, #0000 45%, rgb(247, 120, 46) 0 55%, #0000 0) 0 / 300% 100% no-repeat text;
+        animation: l3 2s linear infinite;
+    }
+
+    .loader:before {
+        content: "Loading";
+    }
+
+    @keyframes l3 {
+        0% {
+            background-position: 100%;
+        }
+
+        100% {
+            background-position: 0;
+        }
+    }

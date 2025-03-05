@@ -101,6 +101,8 @@ class AccountRepository extends BaseRepository implements AccountRepositoryInter
     {
         $pipeline = [];
 
+
+
         // Thêm pipeline birthday từ controller (không lồng thêm key "birthday_pipeline")
         if (!empty($filters['birthday_pipeline'])) {
             $pipeline = array_merge($pipeline, $filters['birthday_pipeline']);
@@ -149,6 +151,8 @@ class AccountRepository extends BaseRepository implements AccountRepositoryInter
         // Sắp xếp dữ liệu
         $pipeline[] = ['$sort' => ['_id' => 1]];
 
+
+
         // Thêm skip và limit cho phân trang
         $pipeline[] = ['$skip' => ($page - 1) * $perPage];
         $pipeline[] = ['$limit' => $perPage];
@@ -160,9 +164,11 @@ class AccountRepository extends BaseRepository implements AccountRepositoryInter
             $data = [];
         }
 
+
         // Tổng số bản ghi
         $total = $this->model->countDocuments($filters);
         $lastPage = ceil($total / $perPage);
+
 
         return [
             'data' => $data,
@@ -500,8 +506,10 @@ class AccountRepository extends BaseRepository implements AccountRepositoryInter
             ]
         ];
 
+
         // Chạy query
         $result = $collection->aggregate($pipeline);
+
         $uids = [];
         foreach ($result as $item) {
             $uids[] = $item['uid'];

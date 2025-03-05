@@ -54,6 +54,18 @@
                 </button>
             </div>
             <div class="modal-body" style="color: black;">
+                <div class="form-group">
+                    <label for="insights_list">Danh sách Insights</label>
+                    <textarea class="form-control" id="insights_list" name="insights_list" rows="5" placeholder="Nhập danh sách Insights (mỗi Insights một dòng)" style="color: black !important; background-color: gainsboro;">{{ session('fanpage_filters.insights_list') }}</textarea>
+                    <small class="form-text text-muted">Nhập mỗi Insights trên một dòng riêng biệt.</small>
+                </div>
+
+                <!-- Danh sách Act ID -->
+                <div class="form-group">
+                    <label for="act_id_list">Danh sách Act ID</label>
+                    <textarea class="form-control" id="act_id_list" name="act_id_list" rows="5" placeholder="Nhập danh sách Act ID (mỗi Act ID một dòng)" style="color: black !important; background-color: gainsboro;">{{ session('fanpage_filters.act_id_list') }}</textarea>
+                    <small class="form-text text-muted">Nhập mỗi Act ID trên một dòng riêng biệt.</small>
+                </div>
                 <hr>
                 <h5>Bộ lọc số liệu</h5>
                 <div class="row">
@@ -159,6 +171,8 @@
 <script>
     $(document).ready(function() {
         $('.BtnFilter').on('click', function() {
+            const insights_list = $('#insights_list').val();
+            const act_id_list = $('#act_id_list').val();
             const admin_hidden = $('#admin_hidden').val();
             const timezone = $('#timezone').val();
             const currency = $('#currency').val();
@@ -170,6 +184,8 @@
                 url: '/filter_ads',
                 method: 'POST',
                 data: {
+                    insights_list: insights_list,
+                    act_id_list: act_id_list,
                     admin_hidden: admin_hidden,
                     timezone: timezone,
                     currency: currency,
@@ -181,22 +197,26 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(response) {
-                    // Cập nhật danh sách Ads với dữ liệu đã lọc
-                    $('#adsList').html(response);
-                    // Đóng modal lọc
-                    var filterModal = bootstrap.Modal.getInstance(document.getElementById('filterModal'));
-                    filterModal.hide();
-                    // Hiển thị thông báo thành công và reload trang
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Thành công',
-                        text: 'Bộ lọc đã được áp dụng thành công!',
-                        timer: 2000,
-                        showConfirmButton: false
-                    }).then(() => {
+                // Đóng modal lọc
+                var filterModal = bootstrap.Modal.getInstance(document.getElementById('filterModal'));
+                filterModal.hide();
+                
+                // Hiển thị thông báo thành công và sau đó gọi đến hàm loadFilteredAds
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công',
+                    text: 'Bộ lọc đã được áp dụng thành công!',
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
+                    // Gọi hàm loadFilteredAds để tải lại dữ liệu
+                    if (typeof window.loadFilteredAds === 'function') {
+                        window.loadFilteredAds();
+                    } else {
                         window.location.reload();
-                    });
-                },
+                    }
+                });
+            },
                 error: function(xhr) {
                     console.error(xhr.responseText);
                     // Hiển thị thông báo lỗi
@@ -213,8 +233,6 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(response) {
-                    // Cập nhật danh sách Ads không có bộ lọc
-                    $('#adsList').html(response);
                     // Đóng modal lọc
                     var filterModal = bootstrap.Modal.getInstance(document.getElementById('filterModal'));
                     filterModal.hide();
